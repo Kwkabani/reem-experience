@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+@theme {
+  --color-night: #0a0a0f;
+  --color-gold: #c9a84c;
+  --color-beige: #d4c5a9;
+  --color-warm-white: #f5f0e8;
+  --color-tech-dark: #0a1628;
+  --color-silver-blue: #8ba4c7;
+  --font-display: "Cairo", sans-serif;
+  --font-body: "Tajawal", sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background-color: var(--color-night);
+  color: var(--color-warm-white);
+  font-family: var(--font-body);
+  direction: rtl;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+::selection {
+  background-color: var(--color-gold);
+  color: var(--color-night);
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-gold);
+  border-radius: 2px;
+}
+
+@keyframes particleFloat {
+  0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+  10% { opacity: 0.04; }
+  90% { opacity: 0.04; }
+  100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+}
+
+@keyframes cardParticleFloat {
+  0% { transform: translateY(20%) translateX(0) rotate(0deg); opacity: 0; }
+  10% { opacity: 0.05; }
+  50% { transform: translateY(-20%) translateX(8px) rotate(5deg); opacity: 0.05; }
+  90% { opacity: 0.05; }
+  100% { transform: translateY(-60%) translateX(-4px) rotate(-3deg); opacity: 0; }
+}
+
+
