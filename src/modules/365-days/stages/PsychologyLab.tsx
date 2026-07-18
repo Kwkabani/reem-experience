@@ -1,113 +1,46 @@
-import { useState, useRef, useEffect } from 'react';import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import StageWrapper from '../components/StageWrapper';
-import GlassCard from '../components/GlassCard';
-import SystemMessage from '../components/SystemMessage';
-import Button from '../components/Button';
-import ChoiceButtons from '../components/ChoiceButtons';
-import BackgroundEffect, { particleDefs } from '../components/BackgroundEffect';
+import GlassCard from '../../../components/GlassCard';
+import SystemMessage from '../../../components/SystemMessage';
+import Button from '../../../components/Button';
+import ChoiceButtons from '../../../components/ChoiceButtons';
+import BackgroundEffect, { particleDefs } from '../../../components/BackgroundEffect';
 import { useGame } from '../context/GameContext';
+import { useAudio } from '../../../context/AudioContext';
+import { useTimerQueue } from '../../../hooks/useTimerQueue';
 import { Stage } from '../types';
-
-interface Choice {
-  label: string;
-  value: string;
-  isComedy?: boolean;
-  comedyAnalysis?: string;
-}
-
-interface Question {
-  id: string;
-  text: string;
-  choices: Choice[];
-}
-
-const questions: Question[] = [
-  {
-    id: 'q1',
-    text: 'لنفرض ان شريك حياتك عاد الى البيت بعد يوم طويل , وكان هادئا اكثر من المعتاد . ماذا سيكون اول تصرف منش ؟',
-    choices: [
-      { label: 'اسأله بهدوء اذا كان بخير , واعطية مساحة لو احتاجها ', value: 'space' },
-      { label: ' ربما يشعر بتعب أو ضغط , وافتح الحديث معه عندما اشعر انه مستعد ', value: 'tired' },
-      {
-        label: 'أفتح جلسة تحقيق , ماحصل؟ , وليش ماتشتي تتكلم الان ؟اعترف من هي اللي زعلتك في الدوام؟ 😂',
-        value: 'angry',
-        isComedy: true,
-        comedyAnalysis:
-          '⛔️ تم تفعيل وضع المحقق كونان 😂 , للأسف لم يتم العثور على اي متهم .... , اشتي اجابة من ريم , مش من قسم التحريات 🌚',
-      },
-    ],
-  },
-  {
-    id: 'q2',
-    text: 'سمعتي قصة غير ناجحة وسلبية عن زواج شخصين "ايش اول انطباع يخطر في بالش ؟"',
-    choices: [
-      { label: 'لكل علاقة ظروفها , ولا احب ان اقيس حياتي على حياة غيري ', value: 'message' },
-      { label: 'استفيد من القصة , بس ماخليها تحكم مستقبلي ', value: 'space_wait' },
-      {
-        label: 'افتح دفتر "قصص الرعب الزوجية " واضيفها للفصل السابع 😂🌚',
-        value: 'eyes',
-        isComedy: true,
-        comedyAnalysis:
-          'تم اكتشاف ارشيف ضخم من القصص 🫣 , "لكن نتذكر ان كل قصة لها مؤلفيها , وليست بالضروره تكون بداية لقصتنا🫰🏼 , نشتي الاجابة اللي تشبهك اكثر ',
-      },
-    ],
-  },
-  {
-    id: 'q3',
-    text: 'بعد الزواج اكتشفتي ان شريك حياتش يختلف عنك في بعض الطباع  "ماعتفعلي ؟" ',
-    choices: [
-      { label: 'احاول ان اتفهمه , ونتعلم كيف نتعامل مع اختلافنا ', value: 'sit_together' },
-      { label: 'نتكلم بكل صراحة عن كل شي , وندور طريقة عشان نتعامل مع اختلافاتنا', value: 'laugh' },
-      {
-        label: 'ابحث في الاعدادات عن زر " تحديث الزوج للإصدار الجديد " 😂 ',
-        value: 'sleep',
-        isComedy: true,
-        comedyAnalysis:
-          'جاري البحث عن التحديث الجديد .....🕵🏻 , " للأسف الانسان لايعمل بالتحديثات 😂🤍 " , لكن الجميل فيه انه يستطيع ان يتعلم ويتغير اذا وجد من يفهمه 🤍 ',
-      },
-    ],
-  },
-];
+import { questions } from '../config/psychologyQuestions';
 
 const analysisMessages: Record<string, string> = {
   space: 'الانسان بطبعة يميل للاكثر حنية , كلمة حالية منش عتقلب كل الموازين ',
-  tired: 'احلا شي في هذه الحياه لما الانسان يلقى الحضن اللي يهرب من مشاكل الحياه لاعنده , وانتي تقدري تكوني المكان الامن هذا ',
+  tired:
+    'احلا شي في هذه الحياه لما الانسان يلقى الحضن اللي يهرب من مشاكل الحياه لاعنده , وانتي تقدري تكوني المكان الامن هذا ',
   message: 'كل قصة لها عنوان , ولها ابطالها , ومش شرط تطلع قصتنا نفس قصتهم',
-  space_wait: 'بالضبط... ناخذ من تجارب الناس الاشياء اللي بتفيدنا , كل تجربة تحمل جوانب سلبيه وايجابية',
+  space_wait:
+    'بالضبط... ناخذ من تجارب الناس الاشياء اللي بتفيدنا , كل تجربة تحمل جوانب سلبيه وايجابية',
   sit_together: 'مافيش في الحياه حاجتين تتشابه وتكون متمسكه ببعضها , ابسط مثال المغناطيس 👌🏻',
   laugh: 'احلا قرار . لان الصراحة بين الطرفين تبسط كل شي وتخلي التفاهم اكثر . ويكون التعامل مرن',
 };
 
 export default function PsychologyLab() {
-  const { goToNextStage, playSound, setAnswer } = useGame();
+  const { goToNextStage, setAnswer } = useGame();
+  const { playSound } = useAudio();
   const [phase, setPhase] = useState<'intro' | 'questions'>('intro');
   const [currentQ, setCurrentQ] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [analysisStep, setAnalysisStep] = useState<'idle' | 'loading' | 'result'>('idle');
   const [analysisText, setAnalysisText] = useState('');
   const [buttonsDisabled, setButtonsDisabled] = useState(false);
-  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
-
-  const clearTimers = () => {
-    timersRef.current.forEach(clearTimeout);
-    timersRef.current = [];
-  };
-
-  // BUG-06 FIX: clear pending timers when this stage unmounts
-  useEffect(() => {
-    return () => {
-      timersRef.current.forEach(clearTimeout);
-      timersRef.current = [];
-    };
-  }, []);
+  const { tmr, clearTimers } = useTimerQueue();
 
   const handleSelect = (value: string) => {
     if (buttonsDisabled) return;
 
-    const question = questions[currentQ];
-    const choice = question.choices.find(c => c.value === value);
+    const question = questions[currentQ]!;
+    const choice = question.choices.find((c) => c.value === value);
     const isComedy = !!choice?.isComedy;
-    const text = isComedy ? choice!.comedyAnalysis! : (analysisMessages[value] || 'مفهوم.');
+    const text = isComedy ? choice!.comedyAnalysis! : analysisMessages[value] || 'مفهوم.';
 
     clearTimers();
     setButtonsDisabled(true);
@@ -120,15 +53,18 @@ export default function PsychologyLab() {
 
     tmr(1500, () => setAnalysisStep('result'));
 
-    tmr(4500, () => {
+    const typingDurationMs = text.length * 25;
+    const autoAdvanceDelay = 1500 + 300 + typingDurationMs + 2000;
+
+    tmr(autoAdvanceDelay, () => {
       if (isComedy) {
         setAnalysisStep('idle');
         setButtonsDisabled(false);
         setAnalysisText('');
       } else {
-        setAnswer(question.id, value);
+        setAnswer(question!.id, value);
         if (currentQ < questions.length - 1) {
-          setCurrentQ(prev => prev + 1);
+          setCurrentQ((prev) => prev + 1);
           setAnalysisStep('idle');
           setButtonsDisabled(false);
         } else {
@@ -137,14 +73,6 @@ export default function PsychologyLab() {
       }
     });
   };
-
-  function tmr(ms: number, fn: () => void) {
-    const id = setTimeout(() => {
-      timersRef.current = timersRef.current.filter(t => t !== id);
-      fn();
-    }, ms);
-    timersRef.current.push(id);
-  }
 
   return (
     <div className="relative min-h-[100dvh] overflow-hidden">
@@ -156,7 +84,8 @@ export default function PsychologyLab() {
       />
 
       {/* Vignette overlays */}
-      <div className="fixed inset-0 z-0 pointer-events-none"
+      <div
+        className="fixed inset-0 z-0 pointer-events-none"
         style={{
           background:
             'linear-gradient(180deg, rgba(0,0,0,0.4) 0%, transparent 30%, transparent 70%, rgba(26,18,12,0.5) 100%),' +
@@ -176,19 +105,16 @@ export default function PsychologyLab() {
             <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-gradient-to-br from-gold/20 to-gold/5 border border-gold/20 flex items-center justify-center">
               <span className="text-gold text-lg">✦</span>
             </div>
-            <h2 className="text-xl font-display font-bold text-gold">
-              مختبر الادراك 
-            </h2>
+            <h2 className="text-xl font-display font-bold text-gold">مختبر الادراك</h2>
             <div className="w-6 h-px bg-gold/15 mx-auto my-2" />
-            <p className="text-beige/50 text-sm">مع ريم</p>
+            <p className="text-beige/70 text-sm">مع ريم</p>
           </motion.div>
         </div>
 
         <div
           className="w-full max-w-xs h-px mx-auto mb-4"
           style={{
-            background:
-              'linear-gradient(90deg, transparent, rgba(201,168,76,0.12), transparent)',
+            background: 'linear-gradient(90deg, transparent, rgba(201,168,76,0.12), transparent)',
           }}
         />
 
@@ -236,7 +162,7 @@ export default function PsychologyLab() {
             >
               <GlassCard variant="warm" delay={0}>
                 <p className="text-warm-white font-body text-lg leading-relaxed text-center">
-                  {questions[currentQ].text}
+                  {questions[currentQ]!.text}
                 </p>
                 <p className="text-beige/50 text-xs mt-3 text-center font-mono">
                   {currentQ + 1} / {questions.length}
@@ -244,7 +170,7 @@ export default function PsychologyLab() {
               </GlassCard>
 
               <ChoiceButtons
-                choices={questions[currentQ].choices}
+                choices={questions[currentQ]!.choices}
                 onSelect={handleSelect}
                 disabled={buttonsDisabled}
               />
@@ -259,12 +185,7 @@ export default function PsychologyLab() {
                     <SystemMessage text="جاري تحليل الاجابة" speed={25} prefix />
                     {analysisStep === 'result' && (
                       <div className="mt-3">
-                        <SystemMessage
-                          text={analysisText}
-                          speed={25}
-                          prefix
-                          delay={0.3}
-                        />
+                        <SystemMessage text={analysisText} speed={25} prefix delay={0.3} />
                       </div>
                     )}
                   </GlassCard>
@@ -281,12 +202,10 @@ export default function PsychologyLab() {
               className="w-full flex flex-col items-center gap-6"
             >
               <GlassCard variant="warm" delay={0.3}>
-                <p className="text-beige/50 text-xs mb-3 text-center font-body">
-                  أخيرًا...
-                </p>
+                <p className="text-beige/50 text-xs mb-3 text-center font-body">أخيرًا...</p>
                 <p className="text-warm-white font-body leading-relaxed text-center text-lg">
-                  "أحيانًا لاتحتاج العلاقات الى اشخاص مثاليين ..
-                  بل الى شخصين يحاول كل واحد منهما ان يفهم الاخر , ويقدر اختلافه , ويحتويه في لحظات ضعفه"
+                  "أحيانًا لاتحتاج العلاقات الى اشخاص مثاليين .. بل الى شخصين يحاول كل واحد منهما ان
+                  يفهم الاخر , ويقدر اختلافه , ويحتويه في لحظات ضعفه"
                 </p>
                 <div
                   className="w-full h-px mx-auto my-4"
@@ -305,12 +224,7 @@ export default function PsychologyLab() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.5 }}
               >
-                <Button
-                  onClick={goToNextStage}
-                  variant="shine"
-                  size="xl"
-                  className="w-full"
-                >
+                <Button onClick={goToNextStage} variant="shine" size="xl" className="w-full">
                   تابع
                 </Button>
               </motion.div>

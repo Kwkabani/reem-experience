@@ -17,11 +17,24 @@ interface BackgroundEffectProps {
   particles?: Particle[];
 }
 
-function BackgroundEffect({ gradient = 'bg-night', glowColor, glowPosition = 'center', particles = [] }: BackgroundEffectProps) {
-  const glowClass = glowPosition === 'bottom' ? 'bottom-0' : glowPosition === 'top' ? 'top-0' : 'top-1/2 -translate-y-1/2';
+function BackgroundEffect({
+  gradient = 'bg-night',
+  glowColor,
+  glowPosition = 'center',
+  particles = [],
+}: BackgroundEffectProps) {
+  const glowClass =
+    glowPosition === 'bottom'
+      ? 'bottom-0'
+      : glowPosition === 'top'
+        ? 'top-0'
+        : 'top-1/2 -translate-y-1/2';
 
   return (
-    <div className={`fixed inset-0 -z-10 pointer-events-none ${gradient} overflow-hidden`}>
+    <div
+      className={`fixed inset-0 -z-10 pointer-events-none ${gradient} overflow-hidden`}
+      aria-hidden="true"
+    >
       {/* Glow */}
       {glowColor && (
         <div
@@ -36,7 +49,7 @@ function BackgroundEffect({ gradient = 'bg-night', glowColor, glowPosition = 'ce
       {particles.map((p, i) => (
         <div
           key={i}
-          className="absolute pointer-events-none select-none"
+          className="absolute pointer-events-none select-none will-change-transform"
           style={{
             left: `${p.x}%`,
             top: `${p.y}%`,

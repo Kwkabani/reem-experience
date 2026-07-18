@@ -1,12 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import StageWrapper from '../components/StageWrapper';
-import GlassCard from '../components/GlassCard';
-import SystemMessage from '../components/SystemMessage';
-import MessageSequence from '../components/MessageSequence';
-import Button from '../components/Button';
-import BackgroundEffect, { particleDefs } from '../components/BackgroundEffect';
+import GlassCard from '../../../components/GlassCard';
+import SystemMessage from '../../../components/SystemMessage';
+import MessageSequence from '../../../components/MessageSequence';
+import Button from '../../../components/Button';
+import BackgroundEffect, { particleDefs } from '../../../components/BackgroundEffect';
 import { useGame } from '../context/GameContext';
+import { useAudio } from '../../../context/AudioContext';
 import { Stage } from '../types';
 
 interface Module {
@@ -21,6 +22,12 @@ const modules: Module[] = [
   { id: 'laugh', label: 'وحدة الضحك', comedy: '😂 النظام يضحك.. هذي أعلى رتبة.' },
 ];
 
+const completeMessages = [
+  { text: 'الان بعدما عرفنا منش اجابات غرفة الفهم النظام في حياتنا استقر', speed: 25 },
+  { text: 'لان مبدئنا بيكون انشاء الله هي المودة والرحمة', speed: 25 },
+  { text: 'جاهزة نستكشف كيف وضع الحياه ؟', speed: 25 },
+];
+
 interface ModuleLoaderProps {
   module: Module;
   index: number;
@@ -28,7 +35,7 @@ interface ModuleLoaderProps {
 }
 
 function ModuleLoader({ module, index, onComplete }: ModuleLoaderProps) {
-  const { playSound } = useGame();
+  const { playSound } = useAudio();
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState<'loading' | 'success' | 'comedy'>('loading');
 
@@ -61,14 +68,24 @@ function ModuleLoader({ module, index, onComplete }: ModuleLoaderProps) {
     >
       <div className="flex justify-between items-center mb-3">
         <span className="text-warm-white font-display text-sm">{module.label}</span>
-        <span className={`text-xs font-mono ${status === 'loading' ? 'text-silver-blue' : status === 'success' ? 'text-green-400' : 'text-purple-300'}`}>
-          {status === 'loading' ? `${Math.round(progress)}%` : status === 'success' ? '✓ نجاح' : '😁'}
+        <span
+          className={`text-xs font-mono ${status === 'loading' ? 'text-silver-blue' : status === 'success' ? 'text-green-400' : 'text-purple-300'}`}
+        >
+          {status === 'loading'
+            ? `${Math.round(progress)}%`
+            : status === 'success'
+              ? '✓ نجاح'
+              : '😁'}
         </span>
       </div>
       <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
         <motion.div
           className={`h-full rounded-full transition-colors ${
-            status === 'loading' ? 'bg-gold' : status === 'success' ? 'bg-green-500' : 'bg-purple-400'
+            status === 'loading'
+              ? 'bg-gold'
+              : status === 'success'
+                ? 'bg-green-500'
+                : 'bg-purple-400'
           }`}
           animate={{ width: `${progress}%` }}
           transition={{ duration: 0.3 }}
@@ -95,17 +112,22 @@ export default function LifeSystem() {
   const [completeMsgsDone, setCompleteMsgsDone] = useState(false);
   const [completedModules, setCompletedModules] = useState(0);
   const [phase, setPhase] = useState<'modules' | 'installing' | 'complete'>('modules');
+  const installTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // BUG-03 FIX: stable reference via useCallback so ModuleLoader's effect
-  // doesn't restart (and reset progress) on every parent re-render
   const handleModuleComplete = useCallback(() => {
-    setCompletedModules(prev => {
+    setCompletedModules((prev) => {
       const next = prev + 1;
       if (next >= modules.length) {
-        setTimeout(() => setPhase('installing'), 500);
+        installTimerRef.current = setTimeout(() => setPhase('installing'), 500);
       }
       return next;
     });
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (installTimerRef.current) clearTimeout(installTimerRef.current);
+    };
   }, []);
 
   useEffect(() => {
@@ -145,7 +167,7 @@ export default function LifeSystem() {
             exit={{ opacity: 0 }}
             className="w-full flex flex-col items-center gap-3"
           >
-            {modules.map((m, i) => (
+            {modules.map((m, i) =>
               completedModules > i ? null : completedModules === i ? (
                 <ModuleLoader key={m.id} module={m} index={i} onComplete={handleModuleComplete} />
               ) : (
@@ -153,10 +175,10 @@ export default function LifeSystem() {
                   key={m.id}
                   className="w-full max-w-sm border border-white/5 rounded-xl p-4 bg-white/[0.01] opacity-30"
                 >
-                  <span className="text-silver-blue/50 font-display text-sm">⏳ {m.label}</span>
+                  <span className="text-silver-blue/70 font-display text-sm">⏳ {m.label}</span>
                 </div>
-              )
-            ))}
+              ),
+            )}
           </motion.div>
         )}
 
@@ -189,26 +211,12 @@ export default function LifeSystem() {
             </GlassCard>
 
             <div className="w-full max-w-md space-y-3">
-              <MessageSequence
-                messages={[
-                  { text: 'الان بعدما عرفنا منش اجابات غرفة الفهم النظام في حياتنا استقر', speed: 25 },
-                  { text: 'لان مبدئنا بيكون انشاء الله هي المودة والرحمة', speed: 25 },
-                  { text: 'جاهزة نستكشف كيف وضع الحياه ؟', speed: 25 },
-                ]}
-                onComplete={handleCompleteMsgsDone}
-              />
+              <MessageSequence messages={completeMessages} onComplete={handleCompleteMsgsDone} />
             </div>
 
             {completeMsgsDone && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-              >
-                <Button
-                  onClick={goToNextStage}
-                  variant="shine"
-                  size="lg"
-                >
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <Button onClick={goToNextStage} variant="shine" size="lg">
                   يلا نستكشف
                 </Button>
               </motion.div>

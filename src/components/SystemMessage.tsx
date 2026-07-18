@@ -1,6 +1,6 @@
 import { useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { useGame } from '../context/GameContext';
+import { useAudio } from '../context/AudioContext';
 import useTypewriter from '../hooks/useTypewriter';
 
 interface SystemMessageProps {
@@ -18,11 +18,11 @@ export default function SystemMessage({
   className = '',
   prefix = true,
 }: SystemMessageProps) {
-  const { playSound } = useGame();
+  const { playSound } = useAudio();
   const charCountRef = useRef(0);
   const onChar = useCallback(() => {
     charCountRef.current++;
-    if (charCountRef.current % 3 === 0) {
+    if (charCountRef.current % 5 === 0) {
       playSound('typing');
     }
   }, [playSound]);
@@ -34,6 +34,8 @@ export default function SystemMessage({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className={`font-mono text-silver-blue text-sm leading-relaxed ${className}`}
+      aria-live="polite"
+      aria-atomic="true"
     >
       {prefix && <span className="text-gold opacity-70">{'> '}</span>}
       {displayText}

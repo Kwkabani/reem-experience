@@ -1,8 +1,9 @@
-import { useGame } from '../context/GameContext';
-import { useCallback, useRef } from 'react';
+import React, { useMemo, useRef } from 'react';
+import { useAudio } from '../context/AudioContext';
+import type { ReactNode } from 'react';
 
 interface ButtonProps {
-  children: string;
+  children: ReactNode;
   onClick: () => void;
   variant?: 'shine' | 'spotlight' | 'glass' | 'nexus';
   size?: 'sm' | 'md' | 'lg' | 'xl';
@@ -10,18 +11,25 @@ interface ButtonProps {
   disabled?: boolean;
 }
 
-export default function Button({ children, onClick, variant = 'shine', size = 'md', className = '', disabled = false }: ButtonProps) {
-  const { playSound } = useGame();
+const Button = React.memo(function Button({
+  children,
+  onClick,
+  variant = 'shine',
+  size = 'md',
+  className = '',
+  disabled = false,
+}: ButtonProps) {
+  const { playSound } = useAudio();
   const spotlightRef = useRef<HTMLButtonElement>(null);
 
-  const sizeClasses: Record<string, string> = {
+  const sizeClasses: Record<'sm' | 'md' | 'lg' | 'xl', string> = {
     sm: 'px-4 py-1.5 text-[13px]',
     md: 'px-5 py-2.5 text-[15px]',
     lg: 'px-7 py-3 text-[17px]',
     xl: 'px-8 py-4 text-[19px]',
   };
 
-  const variantClasses: Record<string, string> = {
+  const variantClasses: Record<'shine' | 'spotlight' | 'glass' | 'nexus', string> = {
     shine:
       'bg-[linear-gradient(135deg,#C9A84C,#B8942E,#D4B85C,#B8942E)] bg-[length:200%_200%] hover:bg-[position:100%_100%] text-[#0d0805] font-bold ' +
       'shadow-[0_2px_4px_rgba(0,0,0,0.2),0_4px_12px_rgba(201,168,76,0.15),0_8px_24px_rgba(201,168,76,0.08)] ' +
@@ -47,24 +55,37 @@ export default function Button({ children, onClick, variant = 'shine', size = 'm
       'active:scale-[0.96] active:shadow-[inset_0_2px_8px_rgba(0,0,0,0.4),inset_0_0_20px_rgba(201,168,76,0.2)]',
   };
 
-  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    if (variant !== 'spotlight' || !spotlightRef.current) return;
-    const rect = spotlightRef.current.getBoundingClientRect();
-    spotlightRef.current.style.setProperty('--mx', `${e.clientX - rect.left}px`);
-    spotlightRef.current.style.setProperty('--my', `${e.clientY - rect.top}px`);
-  }, [variant]);
+  const handleMouseMove = useMemo(() => {
+    let rafId = 0;
+    return (e: React.MouseEvent<HTMLButtonElement>) => {
+      if (rafId) return;
+      rafId = requestAnimationFrame(() => {
+        rafId = 0;
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        e.currentTarget.style.setProperty('--mx', `${x}px`);
+        e.currentTarget.style.setProperty('--my', `${y}px`);
+      });
+    };
+  }, []);
 
   const base = `rounded-xl font-display transition-all duration-200 ease-out cursor-pointer select-none min-h-[44px] hover:scale-[1.03] active:scale-[0.97] ${sizeClasses[size]}`;
 
   return (
     <button
       ref={spotlightRef}
-      className={`${base} ${variantClasses[variant]} ${disabled ? 'opacity-40 cursor-not-allowed pointer-events-none' : ''} ${className}`}
-      onClick={() => { playSound('click'); onClick(); }}
+      className={`${base} ${variantClasses[variant]} ${disabled ? 'opacity-40 cursor-not-allowed' : ''} ${className}`}
+      onClick={() => {
+        playSound('click');
+        onClick();
+      }}
       onMouseMove={handleMouseMove}
       disabled={disabled}
     >
       {children}
     </button>
   );
-}
+});
+
+export default Button;

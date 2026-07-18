@@ -1,86 +1,60 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import StageWrapper from '../components/StageWrapper';
-import GlassCard from '../components/GlassCard';
-import SystemMessage from '../components/SystemMessage';
-import FileCard from '../components/FileCard';
-import ChoiceButtons from '../components/ChoiceButtons';
-import Button from '../components/Button';
-import MessageSequence from '../components/MessageSequence';
-import BackgroundEffect, { particleDefs } from '../components/BackgroundEffect';
+import GlassCard from '../../../components/GlassCard';
+import SystemMessage from '../../../components/SystemMessage';
+import FileCard from '../../../components/FileCard';
+import ChoiceButtons from '../../../components/ChoiceButtons';
+import Button from '../../../components/Button';
+import MessageSequence from '../../../components/MessageSequence';
+import BackgroundEffect, { particleDefs } from '../../../components/BackgroundEffect';
 import { useGame } from '../context/GameContext';
+import { useAudio } from '../../../context/AudioContext';
 import { Stage } from '../types';
+import { scenarios } from '../config/lifeScenarios';
+import { useTimerQueue } from '../../../hooks/useTimerQueue';
+import { shuffle } from '../../../utils/random';
+import { COMEDY_FAILS } from '../config/content';
+import { TIMING } from '../config/timing';
 
-interface Scenario {
-  id: string;
-  title: string;
-  description: string;
-  choices: { label: string; value: string; isComedy?: boolean; comedyAnalysis?: string }[];
-  solution: string;
-}
-
-const scenarios: Scenario[] = [
-  {
-    id: 'hard_day',
-    title: 'يوم صعب',
-    description: 'وصلت البيت بعد يوم طويل وكانت طاقتك صفر. أنا موجود/ة بجانبك. ماذا تفضل أن أفعل؟',
-    choices: [
-      { label: 'تجلس بجانبي بصمت وتحتضنني', value: 'silent_hug' },
-      { label: 'تسألني وش صار وتحاول تفهم', value: 'ask' },
-      {
-        label: 'تقول لي "خلص عادي" وتكمل سوالفك 😂',
-        value: 'ignore',
-        isComedy: true,
-        comedyAnalysis: '😂 أها! تقولي عادي وتمشي! هذا تهرب يا ياشيخة.',
-      },
-    ],
-    solution: 'في الأيام الصعبة، مجرد وجودك بجانبي بصمت هو كل ما أحتاج. لا كلمات كثيرة، فقط حضور دافئ.',
-  },
-  {
-    id: 'difference',
-    title: 'اختلاف',
-    description: 'عندنا رأي مختلف في شيء بسيط. أنا مصر على رأيي وأنتِ مصرّة على رأيك. شو الحل؟',
-    choices: [
-      { label: 'نتفاهم وكل واحد يشرح وجهة نظره', value: 'talk' },
-      { label: 'أحاول أفهم وجهة نظرك أكثر', value: 'understand' },
-      {
-        label: 'أقول "خلاص أنا الصح" وأمشي 😤',
-        value: 'stubborn',
-        isComedy: true,
-        comedyAnalysis: '😂 أنا الصح وأمشي! واضح إنش عنيده والعناد يجري في الدم.',
-      },
-    ],
-    solution: 'الاختلاف طبيعي. ليس المهم من الصح، المهم إننا نخرج من النقاش ونحن أقرب لبعض.',
-  },
-  {
-    id: 'space',
-    title: 'مساحة شخصية',
-    description: 'أطلب منك مساحة يوم أو يومين. هل هذا يخوفك؟ كيف تتصرفين؟',
-    choices: [
-      { label: 'أحترم طلبك وأعطيك مساحة بثقة', value: 'respect_space' },
-      { label: 'أتواصل معك برسالة بسيطة بدون إلحاح', value: 'gentle_message' },
-      {
-        label: 'أقعد أرسلك ٥٠ رسالة "تمام عليك؟" 😂',
-        value: 'spam',
-        isComedy: true,
-        comedyAnalysis: '😂 ٥٠ رسالة! هذا مو حب هذا تحقيق.',
-      },
-    ],
-    solution: 'طلب المساحة ليس بعدًا. أحيانًا يحتاج الإنسان يتنفس ليعود أقوى. ثقتك بي هي أكبر دعم.',
-  },
+const filesIntroMessages = [
+  { text: 'هممم......ثلاثة ملفات في الحياه ؟', speed: 25 },
+  { text: 'فيني فضول اكثر منش نعرف ايش في الملفات هذه', speed: 25 },
+  { text: 'بسرعة افتحيهن مش مقدرتش اصبر', speed: 25 },
 ];
 
-const comedyFails = [
-  '😂 لا حياة في الخادم! معلش بحمله مرة ثانية...',
-  '😂 الحياة مشغولة شوي! ثالث مرة هتشتغل أكيد...',
-  '😂 والله أنا تعبت! آخر مرة يا حياة يا... خلاص',
+const searchingMessages = [
+  { text: 'جاري البحث عن وجهتنا القادمة...', speed: 25 },
+  { text: 'تم تحديد الوجهه بنجاح', speed: 25 },
+  { text: 'وجهتنا الى اهم مكان يخص ريم', speed: 25 },
+  { text: 'سيتم الان الانتقال الى بيت ريم في المستقبل', speed: 25 },
+];
+
+const fileCompleteMessages1 = [
+  { text: 'تم اكتمال فحص الملف الاول', speed: 25 },
+  { text: 'حلويييين باقي نكتشف ايش في الملفين الثانيين ...فيني شجن اعرف', speed: 25 },
+];
+
+const fileCompleteMessages2 = [
+  { text: 'تم اكمال فحص ملفين بنجاح', speed: 25 },
+  { text: 'باقي لنا اخر ملف ونكتشف ايش بيطلع لنا نكتشف', speed: 25 },
+];
+
+const doneMessages = [
+  { text: 'خلاص كملنا اكتشفنا اهم ثلاثه ملفات كل الناس معقدة منها في الحياه', speed: 25 },
+  { text: 'جاهزة ننتقل للي بعده', speed: 25 },
 ];
 
 export default function LifeLoading() {
-  const { goToNextStage, playSound } = useGame();
-  const [phase, setPhase] = useState<'loading' | 'files' | 'scenario' | 'file_complete' | 'done' | 'searching'>('loading');
+  const { goToNextStage } = useGame();
+  const { playSound } = useAudio();
+  const [phase, setPhase] = useState<
+    'loading' | 'files' | 'scenario' | 'file_complete' | 'done' | 'searching'
+  >('loading');
   const [loadingAttempt, setLoadingAttempt] = useState(0);
-  const [loadingSubPhase, setLoadingSubPhase] = useState<'loading' | 'error' | 'success'>('loading');
+  const [loadingSubPhase, setLoadingSubPhase] = useState<'loading' | 'error' | 'success'>(
+    'loading',
+  );
   const [currentScenario, setCurrentScenario] = useState(0);
   const [completed, setCompleted] = useState<string[]>([]);
   const [analysisStep, setAnalysisStep] = useState<'idle' | 'loading' | 'result'>('idle');
@@ -89,36 +63,8 @@ export default function LifeLoading() {
   const [showContinue, setShowContinue] = useState(false);
   const [filesIntroDone, setFilesIntroDone] = useState(false);
   const [doneMsgsComplete, setDoneMsgsComplete] = useState(false);
-  const [shuffledScenarios] = useState(() => {
-    const arr = [...scenarios];
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    return arr;
-  });
-  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
-
-  const clearTimers = () => {
-    timersRef.current.forEach(clearTimeout);
-    timersRef.current = [];
-  };
-
-  function tmr(ms: number, fn: () => void) {
-    const id = setTimeout(() => {
-      timersRef.current = timersRef.current.filter(t => t !== id);
-      fn();
-    }, ms);
-    timersRef.current.push(id);
-  }
-
-  // BUG-06 FIX: clear all pending timers when this stage unmounts
-  useEffect(() => {
-    return () => {
-      timersRef.current.forEach(clearTimeout);
-      timersRef.current = [];
-    };
-  }, []);
+  const [shuffledScenarios] = useState(() => shuffle(scenarios));
+  const { tmr, clearTimers } = useTimerQueue();
 
   useEffect(() => {
     if (phase !== 'loading') return;
@@ -131,21 +77,21 @@ export default function LifeLoading() {
           playSound('error');
           setLoadingSubPhase('error');
         }
-      }, 1500);
+      }, TIMING.LOAD_INITIAL_DELAY);
       return () => clearTimeout(t);
     }
 
     if (loadingSubPhase === 'error') {
       const t = setTimeout(() => {
-        setLoadingAttempt(prev => prev + 1);
+        setLoadingAttempt((prev) => prev + 1);
         setLoadingSubPhase('loading');
-      }, 4000);
+      }, TIMING.LOAD_ERROR_DELAY);
       return () => clearTimeout(t);
     }
 
     if (loadingSubPhase === 'success') {
       playSound('success');
-      const t = setTimeout(() => setPhase('files'), 3000);
+      const t = setTimeout(() => setPhase('files'), TIMING.LOAD_SUCCESS_DELAY);
       return () => clearTimeout(t);
     }
   }, [phase, loadingAttempt, loadingSubPhase, playSound]);
@@ -153,15 +99,15 @@ export default function LifeLoading() {
   useEffect(() => {
     if (phase !== 'file_complete') return;
     const t = setTimeout(() => {
-      setCurrentScenario(prev => prev + 1);
+      setCurrentScenario((prev) => prev + 1);
       setPhase('files');
-    }, 5000);
+    }, TIMING.FILE_COMPLETE_DELAY);
     return () => clearTimeout(t);
   }, [phase]);
 
   const handleFileClick = (id: string) => {
     if (!filesIntroDone) setFilesIntroDone(true);
-    const idx = shuffledScenarios.findIndex(s => s.id === id);
+    const idx = shuffledScenarios.findIndex((s) => s.id === id);
     if (idx >= 0) {
       setCurrentScenario(idx);
       setPhase('scenario');
@@ -172,8 +118,8 @@ export default function LifeLoading() {
   const handleChoice = (value: string) => {
     if (buttonsDisabled) return;
 
-    const scenario = shuffledScenarios[currentScenario];
-    const choice = scenario.choices.find(c => c.value === value);
+    const scenario = shuffledScenarios[currentScenario]!;
+    const choice = scenario.choices.find((c) => c.value === value);
     const isComedy = !!choice?.isComedy;
     const text = isComedy ? choice!.comedyAnalysis! : scenario.solution;
 
@@ -201,7 +147,7 @@ export default function LifeLoading() {
   };
 
   const handleContinue = useCallback(() => {
-    setCompleted(prev => [...prev, shuffledScenarios[currentScenario].id]);
+    setCompleted((prev) => [...prev, shuffledScenarios[currentScenario]!.id]);
     setShowContinue(false);
     setAnalysisStep('idle');
     setAnalysisText('');
@@ -212,27 +158,14 @@ export default function LifeLoading() {
     } else {
       setPhase('file_complete');
     }
-  }, [currentScenario]);
+  }, [currentScenario, shuffledScenarios]);
 
   const handleSearchingComplete = useCallback(() => {
     goToNextStage();
   }, [goToNextStage]);
 
-  const fileCardBaseDelay = filesIntroDone ? 0 : 3.7;
+  const fileCardBaseDelay = filesIntroDone ? 0 : TIMING.FILE_INTRO_DELAY;
   const filesCompletedCount = completed.length;
-
-  const filesIntroMessages = [
-    { text: 'هممم......ثلاثة ملفات في الحياه ؟', speed: 25 },
-    { text: 'فيني فضول اكثر منش نعرف ايش في الملفات هذه', speed: 25 },
-    { text: 'بسرعة افتحيهن مش مقدرتش اصبر', speed: 25 },
-  ];
-
-  const searchingMessages = [
-    { text: 'جاري البحث عن وجهتنا القادمة...', speed: 25 },
-    { text: 'تم تحديد الوجهه بنجاح', speed: 25 },
-    { text: 'وجهتنا الى اهم مكان يخص ريم', speed: 25 },
-    { text: 'سيتم الان الانتقال الى بيت ريم في المستقبل', speed: 25 },
-  ];
 
   return (
     <StageWrapper stage={Stage.LifeLoading}>
@@ -279,7 +212,7 @@ export default function LifeLoading() {
                 <GlassCard>
                   <p className="text-red-400 font-display text-center mb-2">فشل التحميل</p>
                   <p className="text-silver-blue text-sm text-center">
-                    {comedyFails[loadingAttempt]}
+                    {COMEDY_FAILS[loadingAttempt]}
                   </p>
                 </GlassCard>
               </motion.div>
@@ -305,8 +238,11 @@ export default function LifeLoading() {
               </div>
             )}
             <p className="text-silver-blue font-mono text-sm text-center mb-2">الملفات المتاحة:</p>
+            <p className="text-xs text-silver-blue/50 font-mono text-center">
+              {completed.length} / {scenarios.length} ملفات مكتملة
+            </p>
             {shuffledScenarios
-              .filter(s => !completed.includes(s.id))
+              .filter((s) => !completed.includes(s.id))
               .map((s, i) => (
                 <FileCard
                   key={s.id}
@@ -316,7 +252,7 @@ export default function LifeLoading() {
                   duration={1.2 + i * 0.3}
                 />
               ))}
-            {shuffledScenarios.every(s => completed.includes(s.id)) && (
+            {shuffledScenarios.every((s) => completed.includes(s.id)) && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -324,11 +260,7 @@ export default function LifeLoading() {
                 className="text-center mt-4"
               >
                 <p className="text-gold font-display mb-4">تم فتح جميع الملفات</p>
-                <Button
-                  onClick={() => setPhase('done')}
-                  variant="shine"
-                  size="lg"
-                >
+                <Button onClick={() => setPhase('done')} variant="shine" size="lg">
                   أكمل
                 </Button>
               </motion.div>
@@ -342,19 +274,9 @@ export default function LifeLoading() {
               >
                 <div className="w-full max-w-md space-y-3">
                   {filesCompletedCount === 1 ? (
-                    <MessageSequence
-                      messages={[
-                        { text: 'تم اكتمال فحص الملف الاول', speed: 25 },
-                        { text: 'حلويييين باقي نكتشف ايش في الملفين الثانيين ...فيني شجن اعرف', speed: 25 },
-                      ]}
-                    />
+                    <MessageSequence messages={fileCompleteMessages1} />
                   ) : (
-                    <MessageSequence
-                      messages={[
-                        { text: 'تم اكمال فحص ملفين بنجاح', speed: 25 },
-                        { text: 'باقي لنا اخر ملف ونكتشف ايش بيطلع لنا نكتشف', speed: 25 },
-                      ]}
-                    />
+                    <MessageSequence messages={fileCompleteMessages2} />
                   )}
                 </div>
               </motion.div>
@@ -371,12 +293,16 @@ export default function LifeLoading() {
             className="w-full flex flex-col items-center gap-5"
           >
             <GlassCard>
-              <p className="text-gold font-display font-bold mb-3">{shuffledScenarios[currentScenario].title}</p>
-              <p className="text-warm-white font-body leading-relaxed">{shuffledScenarios[currentScenario].description}</p>
+              <p className="text-gold font-display font-bold mb-3">
+                {shuffledScenarios[currentScenario]!.title}
+              </p>
+              <p className="text-warm-white font-body leading-relaxed">
+                {shuffledScenarios[currentScenario]!.description}
+              </p>
             </GlassCard>
 
             <ChoiceButtons
-              choices={shuffledScenarios[currentScenario].choices}
+              choices={shuffledScenarios[currentScenario]!.choices}
               onSelect={handleChoice}
               disabled={buttonsDisabled}
             />
@@ -399,15 +325,8 @@ export default function LifeLoading() {
             )}
 
             {showContinue && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
-                <Button
-                  onClick={handleContinue}
-                  variant="shine"
-                  size="lg"
-                >
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                <Button onClick={handleContinue} variant="shine" size="lg">
                   {currentScenario < shuffledScenarios.length - 1 ? 'الملف التالي' : 'إنهاء'}
                 </Button>
               </motion.div>
@@ -424,19 +343,13 @@ export default function LifeLoading() {
           >
             <div className="w-full max-w-md space-y-3">
               <MessageSequence
-                messages={[
-                  { text: 'خلاص كملنا اكتشفنا اهم ثلاثه ملفات كل الناس معقدة منها في الحياه', speed: 25 },
-                  { text: 'جاهزة ننتقل للي بعده', speed: 25 },
-                ]}
+                messages={doneMessages}
                 onComplete={() => setDoneMsgsComplete(true)}
               />
             </div>
 
             {doneMsgsComplete && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-              >
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 <Button
                   onClick={() => {
                     setPhase('searching');
@@ -468,17 +381,20 @@ export default function LifeLoading() {
               className="relative w-28 h-28"
             >
               <div className="absolute inset-0 border-2 border-silver-blue/20 rounded-full animate-ping" />
-              <div className="absolute inset-2 border border-gold/20 rounded-full animate-spin" style={{ animationDuration: '4s' }} />
+              <div
+                className="absolute inset-2 border border-gold/20 rounded-full animate-spin"
+                style={{ animationDuration: '4s' }}
+              />
               <div className="absolute inset-4 border border-silver-blue/10 rounded-full" />
-              <div className="absolute inset-6 border border-gold/10 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '3s' }} />
+              <div
+                className="absolute inset-6 border border-gold/10 rounded-full animate-spin"
+                style={{ animationDirection: 'reverse', animationDuration: '3s' }}
+              />
               <div className="absolute inset-[42%] bg-gold rounded-full shadow-[0_0_12px_rgba(201,168,76,0.5)] animate-pulse" />
             </motion.div>
 
             <div className="w-full max-w-md space-y-3">
-              <MessageSequence
-                messages={searchingMessages}
-                onComplete={handleSearchingComplete}
-              />
+              <MessageSequence messages={searchingMessages} onComplete={handleSearchingComplete} />
             </div>
           </motion.div>
         )}

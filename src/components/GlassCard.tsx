@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { memo } from 'react';
 import type { ReactNode } from 'react';
 
 interface GlassCardProps {
@@ -14,15 +15,17 @@ const variants = {
   dark: 'backdrop-blur-xl bg-[#0d0805]/70 border border-[#c9a84c]/15',
 };
 
-export default function GlassCard({ children, className = '', delay = 0, variant = 'default' }: GlassCardProps) {
+function GlassCard({ children, className = '', delay = 0, variant = 'default' }: GlassCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay, ease: 'easeOut' }}
-      className={`${variants[variant]} rounded-2xl p-6 w-full max-w-md ${className}`}
+      className={`${variants[variant]} rounded-2xl p-6 w-full max-w-lg ${className}`}
     >
       {children}
     </motion.div>
   );
 }
+
+export default memo(GlassCard);

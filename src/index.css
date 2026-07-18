@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
   --color-night: #0a0a0f;
@@ -7,14 +7,11 @@
   --color-warm-white: #f5f0e8;
   --color-tech-dark: #0a1628;
   --color-silver-blue: #8ba4c7;
-  --font-display: "Cairo", sans-serif;
-  --font-body: "Tajawal", sans-serif;
+  --font-display: 'Cairo', sans-serif;
+  --font-body: 'Tajawal', sans-serif;
 }
 
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -56,18 +53,50 @@ body {
 }
 
 @keyframes particleFloat {
-  0% { transform: translateY(0) rotate(0deg); opacity: 0; }
-  10% { opacity: 0.04; }
-  90% { opacity: 0.04; }
-  100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.04;
+  }
+  90% {
+    opacity: 0.04;
+  }
+  100% {
+    transform: translateY(-100vh) rotate(360deg);
+    opacity: 0;
+  }
 }
 
 @keyframes cardParticleFloat {
-  0% { transform: translateY(20%) translateX(0) rotate(0deg); opacity: 0; }
-  10% { opacity: 0.05; }
-  50% { transform: translateY(-20%) translateX(8px) rotate(5deg); opacity: 0.05; }
-  90% { opacity: 0.05; }
-  100% { transform: translateY(-60%) translateX(-4px) rotate(-3deg); opacity: 0; }
+  0% {
+    transform: translateY(20%) translateX(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.05;
+  }
+  50% {
+    transform: translateY(-20%) translateX(8px) rotate(5deg);
+    opacity: 0.05;
+  }
+  90% {
+    opacity: 0.05;
+  }
+  100% {
+    transform: translateY(-60%) translateX(-4px) rotate(-3deg);
+    opacity: 0;
+  }
 }
 
-
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

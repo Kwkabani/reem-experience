@@ -1,3 +1,4 @@
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface RealDoorProps {
@@ -8,7 +9,13 @@ interface RealDoorProps {
   sideWall?: boolean;
 }
 
-export default function RealDoor({ label, onOpen, isOpen = false, isSecret = false, sideWall = false }: RealDoorProps) {
+const RealDoor = React.memo(function RealDoor({
+  label,
+  onOpen,
+  isOpen = false,
+  isSecret = false,
+  sideWall = false,
+}: RealDoorProps) {
   const handleClick = () => {
     if (isOpen) return;
     onOpen();
@@ -29,14 +36,22 @@ export default function RealDoor({ label, onOpen, isOpen = false, isSecret = fal
             exit={{ rotateY: -85, opacity: 0.3 }}
             transition={{ duration: 0.7, ease: 'easeIn' }}
             onClick={handleClick}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleClick();
+              }
+            }}
+            tabIndex={0}
             role="button"
             aria-label={isSecret ? 'باب سري' : label}
             className={`
               relative cursor-pointer select-none
-              ${sideWall ? 'w-[75px] sm:w-[90px] h-[125px] sm:h-[145px]' : 'w-[85px] sm:w-[100px] h-[140px] sm:h-[160px]'}
-              ${isSecret
-                ? 'border-gold shadow-[0_0_20px_rgba(201,168,76,0.4)]'
-                : 'border-[#3E2723] shadow-md shadow-black/30'
+              ${sideWall ? 'w-[85px] sm:w-[95px] min-h-[135px] sm:min-h-[150px]' : 'w-[95px] sm:w-[110px] min-h-[150px] sm:min-h-[170px]'}
+              ${
+                isSecret
+                  ? 'border-gold shadow-[0_0_20px_rgba(201,168,76,0.4)]'
+                  : 'border-[#3E2723] shadow-md shadow-black/30'
               }
             `}
             style={{
@@ -53,15 +68,18 @@ export default function RealDoor({ label, onOpen, isOpen = false, isSecret = fal
               <div
                 className="absolute inset-0 opacity-[0.08]"
                 style={{
-                  background: 'repeating-linear-gradient(0deg, transparent 0px, transparent 5px, rgba(0,0,0,0.4) 5px, rgba(0,0,0,0.4) 6px), repeating-linear-gradient(90deg, transparent 0px, transparent 20px, rgba(0,0,0,0.1) 20px, rgba(0,0,0,0.1) 21px)',
+                  background:
+                    'repeating-linear-gradient(0deg, transparent 0px, transparent 5px, rgba(0,0,0,0.4) 5px, rgba(0,0,0,0.4) 6px), repeating-linear-gradient(90deg, transparent 0px, transparent 20px, rgba(0,0,0,0.1) 20px, rgba(0,0,0,0.1) 21px)',
                 }}
               />
             )}
 
             {isSecret && (
-              <div className="absolute inset-0 opacity-20"
+              <div
+                className="absolute inset-0 opacity-20"
                 style={{
-                  background: 'radial-gradient(circle at 50% 40%, rgba(255,215,0,0.3), transparent 70%)',
+                  background:
+                    'radial-gradient(circle at 50% 40%, rgba(255,215,0,0.3), transparent 70%)',
                 }}
               />
             )}
@@ -76,9 +94,10 @@ export default function RealDoor({ label, onOpen, isOpen = false, isSecret = fal
             <div
               className={`
                 absolute bottom-1.5 left-1/2 -translate-x-1/2 px-1.5 py-[2px] rounded text-center font-display text-[10px] sm:text-[11px] leading-tight whitespace-nowrap
-                ${isSecret
-                  ? 'bg-[#0d0805]/80 text-gold border border-gold/30'
-                  : 'bg-[#0d0805]/70 text-beige/90'
+                ${
+                  isSecret
+                    ? 'bg-[#0d0805]/80 text-gold border border-gold/30'
+                    : 'bg-[#0d0805]/70 text-beige/90'
                 }
               `}
             >
@@ -102,7 +121,7 @@ export default function RealDoor({ label, onOpen, isOpen = false, isSecret = fal
             animate={{ rotateY: 0, opacity: 1 }}
             transition={{ duration: 0.7, ease: 'easeOut' }}
             className={`
-              ${sideWall ? 'w-[75px] sm:w-[90px] h-[125px] sm:h-[145px]' : 'w-[85px] sm:w-[100px] h-[140px] sm:h-[160px]'}
+              ${sideWall ? 'w-[85px] sm:w-[95px] min-h-[135px] sm:min-h-[150px]' : 'w-[95px] sm:w-[110px] min-h-[150px] sm:min-h-[170px]'}
               rounded-[3px_3px_0_0] flex items-center justify-center
               ${isSecret ? 'bg-gold/10' : 'bg-transparent'}
             `}
@@ -114,17 +133,22 @@ export default function RealDoor({ label, onOpen, isOpen = false, isSecret = fal
               boxShadow: isSecret ? 'inset 0 0 30px rgba(201,168,76,0.2)' : 'none',
             }}
           >
-            <motion.span
-              className="text-gold text-xl sm:text-2xl font-display"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.3, type: 'spring' }}
-            >
-              ✓
-            </motion.span>
+            <div className="flex flex-col items-center gap-1">
+              <motion.span
+                className="text-gold text-xl sm:text-2xl font-display"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.3, type: 'spring' }}
+              >
+                ✓
+              </motion.span>
+              <span className="text-silver-blue/50 text-[10px] font-mono">{label}</span>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
     </motion.div>
   );
-}
+});
+
+export default RealDoor;

@@ -6,8 +6,10 @@ interface Options {
   onChar?: () => void;
 }
 
-// BUG-10 FIX: return { displayed, isComplete } so callers can stop the cursor
-export default function useTypewriter(text: string, { speed = 40, delay = 0, onChar }: Options = {}) {
+export default function useTypewriter(
+  text: string,
+  { speed = 40, delay = 0, onChar }: Options = {},
+) {
   const [displayed, setDisplayed] = useState('');
   const [started, setStarted] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
@@ -15,6 +17,9 @@ export default function useTypewriter(text: string, { speed = 40, delay = 0, onC
   const charTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const onCharRef = useRef(onChar);
   onCharRef.current = onChar;
+
+  const batchRef = useRef(0);
+  const BATCH_SIZE = 3;
 
   useEffect(() => {
     const delayTimer = setTimeout(() => setStarted(true), delay * 1000);
@@ -24,19 +29,25 @@ export default function useTypewriter(text: string, { speed = 40, delay = 0, onC
   useEffect(() => {
     if (!started) return;
     indexRef.current = 0;
+    batchRef.current = 0;
     setDisplayed('');
-    setIsComplete(false); // reset on text/speed change
+    setIsComplete(false);
 
     if (charTimerRef.current) clearInterval(charTimerRef.current);
 
     charTimerRef.current = setInterval(() => {
       if (indexRef.current < text.length) {
-        setDisplayed(text.slice(0, indexRef.current + 1));
         indexRef.current++;
+        batchRef.current++;
         onCharRef.current?.();
+
+        if (batchRef.current >= BATCH_SIZE || indexRef.current >= text.length) {
+          setDisplayed(text.slice(0, indexRef.current));
+          batchRef.current = 0;
+        }
       } else {
         if (charTimerRef.current) clearInterval(charTimerRef.current);
-        setIsComplete(true); // typing finished
+        setIsComplete(true);
       }
     }, speed);
 

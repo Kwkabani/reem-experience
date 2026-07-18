@@ -1,19 +1,21 @@
-export const Stage = {
-  Welcome: 0,
-  PsychologyLab: 1,
-  LifeSystem: 2,
-  LifeLoading: 3,
-  House: 4,
-  Reveal: 5,
-  FinalMessage: 6,
-} as const;
+export type SoundType =
+  'click' | 'success' | 'error' | 'door' | 'typing' | 'complete' | 'loading' | 'ready';
 
-export type Stage = (typeof Stage)[keyof typeof Stage];
+export interface Choice {
+  id: string;
+  text: string;
+  isComedy?: boolean;
+}
 
-export const STAGE_COUNT = 7;
+export interface Question {
+  id: string;
+  text: string;
+  choices: Choice[];
+}
 
-export interface GameState {
-  currentStage: Stage;
-  answers: Record<string, string>;
-  audioEnabled: boolean;
+export interface Scenario {
+  id: string;
+  title: string;
+  description: string;
+  choices: Choice[];
 }

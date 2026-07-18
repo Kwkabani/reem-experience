@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { motion } from 'framer-motion';
 
 interface LetterProps {
@@ -6,7 +7,7 @@ interface LetterProps {
   delay?: number;
 }
 
-export default function Letter({ content, title, delay = 0 }: LetterProps) {
+function Letter({ content, title, delay = 0 }: LetterProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 30, rotateX: -15 }}
@@ -26,3 +27,5 @@ export default function Letter({ content, title, delay = 0 }: LetterProps) {
     </motion.div>
   );
 }
+
+export default memo(Letter);

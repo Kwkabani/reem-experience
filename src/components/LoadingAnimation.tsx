@@ -1,14 +1,15 @@
+import { memo } from 'react';
 import { motion } from 'framer-motion';
 
 interface LoadingAnimationProps {
   text?: string;
 }
 
-export default function LoadingAnimation({ text = 'جاري التحميل...' }: LoadingAnimationProps) {
+function LoadingAnimation({ text = 'جاري التحميل...' }: LoadingAnimationProps) {
   return (
-    <div className="flex flex-col items-center gap-5">
+    <div className="flex flex-col items-center gap-5" role="status" aria-live="polite">
       <div className="flex gap-1.5">
-        {[0, 1, 2].map(i => (
+        {[0, 1, 2].map((i) => (
           <motion.div
             key={i}
             className="w-2.5 h-2.5 bg-gold rounded-full"
@@ -27,3 +28,5 @@ export default function LoadingAnimation({ text = 'جاري التحميل...' }
     </div>
   );
 }
+
+export default memo(LoadingAnimation);

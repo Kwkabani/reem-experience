@@ -56,7 +56,9 @@ export default function FileCard({ title, onClick, delay = 0, duration = 1.5 }: 
       <div className="flex items-center gap-3 mb-3">
         <span className="text-gold text-xl flex-shrink-0">📁</span>
         <div className="min-w-0">
-          <p className="text-warm-white font-display font-bold truncate">{title}</p>
+          <p className="text-warm-white font-display font-bold truncate" title={title}>
+            {title}
+          </p>
         </div>
         {isComplete && <span className="mr-auto text-gold text-sm">✓</span>}
       </div>
@@ -67,7 +69,11 @@ export default function FileCard({ title, onClick, delay = 0, duration = 1.5 }: 
           transition={{ duration: 0.3 }}
         />
       </div>
-      <p className="text-xs text-silver-blue/50 mt-2 font-mono">
+      <p
+        className="text-xs text-silver-blue/50 mt-2 font-mono"
+        aria-live="polite"
+        aria-atomic="true"
+      >
         {isComplete ? '✅ جاهز للفتح' : `جاري التحميل... ${Math.round(Math.min(progress, 100))}%`}
       </p>
     </motion.div>

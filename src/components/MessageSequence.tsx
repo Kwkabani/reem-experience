@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import SystemMessage from './SystemMessage';
+import MemoizedSystemMessage from './MemoizedSystemMessage';
 import useSequentialMessages from '../hooks/useSequentialMessages';
 import type { TimedMessage } from '../hooks/useSequentialMessages';
 
@@ -10,7 +10,11 @@ interface MessageSequenceProps {
   onComplete?: () => void;
 }
 
-export default function MessageSequence({ messages, className = '', onComplete }: MessageSequenceProps) {
+export default function MessageSequence({
+  messages,
+  className = '',
+  onComplete,
+}: MessageSequenceProps) {
   const { activeIndex, isComplete } = useSequentialMessages(messages);
 
   useEffect(() => {
@@ -18,7 +22,7 @@ export default function MessageSequence({ messages, className = '', onComplete }
   }, [isComplete, onComplete]);
 
   return (
-    <div className={`space-y-2 ${className}`}>
+    <div className={`space-y-2 ${className}`} aria-live="polite" aria-atomic="false">
       {messages.map((msg, i) => (
         <AnimatePresence key={i}>
           {i <= activeIndex && (
@@ -28,7 +32,7 @@ export default function MessageSequence({ messages, className = '', onComplete }
               exit={{ opacity: 0 }}
               transition={{ duration: 0.4 }}
             >
-              <SystemMessage text={msg.text} speed={msg.speed ?? 30} delay={0} prefix />
+              <MemoizedSystemMessage text={msg.text} speed={msg.speed ?? 30} />
             </motion.div>
           )}
         </AnimatePresence>

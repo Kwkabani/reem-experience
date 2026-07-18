@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { motion } from 'framer-motion';
 import type { ReactNode } from 'react';
 
@@ -35,7 +36,7 @@ const loveParticles = [
   { text: '10-07-2025', x: 25, y: 65, size: 11, duration: 21, delay: 7 },
 ];
 
-export default function LoveCard({ children, delay = 0, variant = 'letter', className = '' }: LoveCardProps) {
+function LoveCard({ children, delay = 0, variant = 'letter', className = '' }: LoveCardProps) {
   const v = variants[variant];
 
   return (
@@ -51,7 +52,7 @@ export default function LoveCard({ children, delay = 0, variant = 'letter', clas
         {loveParticles.map((p, i) => (
           <div
             key={i}
-            className="absolute whitespace-nowrap font-display font-bold leading-none"
+            className="absolute whitespace-nowrap font-display font-bold leading-none will-change-transform"
             style={{
               left: `${p.x}%`,
               top: `${p.y}%`,
@@ -84,3 +85,5 @@ export default function LoveCard({ children, delay = 0, variant = 'letter', clas
     </motion.div>
   );
 }
+
+export default memo(LoveCard);

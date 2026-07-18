@@ -1,13 +1,18 @@
+import React from 'react';
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import GlobeAnimation from '../components/GlobeAnimation';
-import GlassCard from '../components/GlassCard';
-import SystemMessage from '../components/SystemMessage';
-import LoadingAnimation from '../components/LoadingAnimation';
+const GlobeAnimation = React.lazy(() => import('../../../components/GlobeAnimation'));
+import GlassCard from '../../../components/GlassCard';
+import SystemMessage from '../../../components/SystemMessage';
+import LoadingAnimation from '../../../components/LoadingAnimation';
 import ProgressIndicator from '../components/ProgressIndicator';
-import Button from '../components/Button';
+import Button from '../../../components/Button';
 import { Stage } from '../types';
 import { useGame } from '../context/GameContext';
+import { useAudio } from '../../../context/AudioContext';
+import { useGlobeState } from '../../../hooks/useGlobeState';
+import { GLOBE_MESSAGES } from '../config/content';
+import { TIMING } from '../config/timing';
 
 type Phase =
   | 'loading'
@@ -19,63 +24,65 @@ type Phase =
   | 'answer'
   | 'card'
   | 'comedy'
-  | 'transition';
-
-const globeMessages = [
-  'جاري تحليل البيانات...',
-  'جاري فحص الموقع الجغرافي...',
-  'تم تحديد الموقع: الجمهورية اليمنية',
-  'جاري البحث عن المنطقة...',
-  'تم التعرف على المنطقة: مأرب',
-];
+  | 'transition'
+  | 'done';
 
 export default function Welcome() {
-  const { goToNextStage, enableAudio, playSound } = useGame();
+  const { goToNextStage } = useGame();
+  const { enableAudio, playSound } = useAudio();
   const [phase, setPhase] = useState<Phase>('loading');
   const [globeMsgIdx, setGlobeMsgIdx] = useState(0);
   const [showRedirect, setShowRedirect] = useState(false);
   const [searchProgress, setSearchProgress] = useState(0);
-  const loadingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const loadingIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const globe = useGlobeState();
 
   // Loading → Globe (3s)
   useEffect(() => {
     if (phase !== 'loading') return;
-    const t = setTimeout(() => setPhase('globe'), 3000);
+    const t = setTimeout(() => {
+      setPhase('globe');
+      globe.show();
+    }, TIMING.WELCOME_LOADING);
     return () => clearTimeout(t);
   }, [phase]);
 
   // Globe messages cycling (every 1.5s)
   useEffect(() => {
     if (phase !== 'globe') return;
-    if (globeMsgIdx >= globeMessages.length) return;
+    if (globeMsgIdx >= GLOBE_MESSAGES.length) return;
     const t = setTimeout(() => {
-      setGlobeMsgIdx(prev => prev + 1);
-    }, 1500);
+      setGlobeMsgIdx((prev) => prev + 1);
+    }, TIMING.GLOBE_MESSAGE_INTERVAL);
     return () => clearTimeout(t);
   }, [phase, globeMsgIdx]);
 
   // All messages done → show redirect for 1.5s → zoom
   useEffect(() => {
     if (phase !== 'globe') return;
-    if (globeMsgIdx < globeMessages.length) return;
+    if (globeMsgIdx < GLOBE_MESSAGES.length) return;
     if (!showRedirect) {
       setShowRedirect(true);
       return;
     }
-    const t = setTimeout(() => setPhase('zoom'), 1500);
+    const t = setTimeout(() => {
+      setPhase('zoom');
+      globe.startZoom();
+    }, TIMING.GLOBE_REDIRECT_DELAY);
     return () => clearTimeout(t);
   }, [phase, globeMsgIdx, showRedirect]);
 
   // Zoom → Analysis
   const handleZoomComplete = () => {
     playSound('ready');
+    globe.finish();
     setPhase('analysis');
   };
 
   // Analysis → Search (4s analysis display)
   useEffect(() => {
     if (phase !== 'analysis') return;
-    const t = setTimeout(() => setPhase('search'), 4000);
+    const t = setTimeout(() => setPhase('search'), TIMING.ANALYSIS_DISPLAY);
     return () => clearTimeout(t);
   }, [phase]);
 
@@ -83,18 +90,25 @@ export default function Welcome() {
   useEffect(() => {
     if (phase !== 'search') return;
     const start = Date.now();
+    let completed = false;
     const interval = setInterval(() => {
       const elapsed = (Date.now() - start) / 1000;
-      const p = Math.min(elapsed / 3.5, 1);
+      const p = Math.min(elapsed / (TIMING.SEARCH_DURATION / 1000), 1);
       setSearchProgress(p);
-      if (p >= 1) {
+      if (p >= 1 && !completed) {
+        completed = true;
         clearInterval(interval);
         playSound('complete');
-        setTimeout(() => setPhase('question'), 500);
       }
     }, 50);
     return () => clearInterval(interval);
   }, [phase, playSound]);
+
+  useEffect(() => {
+    if (phase !== 'search' || searchProgress < 1) return;
+    const t = setTimeout(() => setPhase('question'), TIMING.SEARCH_COMPLETION_DELAY);
+    return () => clearTimeout(t);
+  }, [phase, searchProgress]);
 
   // Eager audio init on mount so sounds play from the start
   useEffect(() => {
@@ -111,61 +125,72 @@ export default function Welcome() {
   // Answer → Card (6s)
   useEffect(() => {
     if (phase !== 'answer') return;
-    const t = setTimeout(() => setPhase('card'), 6000);
+    const t = setTimeout(() => setPhase('card'), TIMING.ANSWER_TO_CARD);
     return () => clearTimeout(t);
   }, [phase]);
 
   // Comedy → Transition (5s)
   useEffect(() => {
     if (phase !== 'comedy') return;
-    const t = setTimeout(() => setPhase('transition'), 5000);
+    const t = setTimeout(() => setPhase('transition'), TIMING.COMEDY_TO_TRANSITION);
     return () => clearTimeout(t);
   }, [phase]);
 
   // Transition → Next (4s)
   useEffect(() => {
     if (phase !== 'transition') return;
-    const t = setTimeout(() => goToNextStage(), 4000);
+    const t = setTimeout(() => goToNextStage(), TIMING.TRANSITION_TO_NEXT);
     return () => clearTimeout(t);
+  }, [phase, goToNextStage]);
+
+  // Done → skip to next stage
+  useEffect(() => {
+    if (phase !== 'done') return;
+    goToNextStage();
   }, [phase, goToNextStage]);
 
   // Loading pulse during loading + zoom phases
   useEffect(() => {
-    if (phase === 'loading' || phase === 'zoom') {
-      if (!loadingIntervalRef.current) {
-        playSound('loading');
-        loadingIntervalRef.current = setInterval(() => playSound('loading'), 800);
-      }
-    } else {
+    if (phase !== 'loading' && phase !== 'zoom') {
       if (loadingIntervalRef.current) {
-        clearInterval(loadingIntervalRef.current);
+        clearTimeout(loadingIntervalRef.current);
         loadingIntervalRef.current = null;
       }
+      return;
     }
+
+    playSound('loading');
+
+    const pulse = () => {
+      loadingIntervalRef.current = setTimeout(() => {
+        playSound('loading');
+        pulse();
+      }, TIMING.LOADING_PULSE_INTERVAL) as unknown as number;
+    };
+
+    loadingIntervalRef.current = setTimeout(
+      pulse,
+      TIMING.LOADING_PULSE_INTERVAL,
+    ) as unknown as number;
+
     return () => {
       if (loadingIntervalRef.current) {
-        clearInterval(loadingIntervalRef.current);
+        clearTimeout(loadingIntervalRef.current);
         loadingIntervalRef.current = null;
       }
     };
   }, [phase, playSound]);
 
-  useEffect(() => {
-    return () => {
-      if (loadingIntervalRef.current) clearInterval(loadingIntervalRef.current);
-    };
-  }, []);
-
-  const globeState =
-    phase === 'loading' ? 'hidden' :
-    phase === 'globe' ? 'rotating' :
-    phase === 'zoom' ? 'zooming' :
-    'done';
-
   return (
-    <motion.div exit={{ opacity: 0 }} className="relative min-h-[100dvh] overflow-hidden" style={{ background: '#030508' }}>
+    <motion.div
+      exit={{ opacity: 0 }}
+      className="relative min-h-[100dvh] overflow-hidden"
+      style={{ background: '#030508' }}
+    >
       {/* GlobeAnimation - mounted for all phases */}
-      <GlobeAnimation state={globeState} onZoomComplete={handleZoomComplete} />
+      <React.Suspense fallback={null}>
+        <GlobeAnimation state={globe.state} onZoomComplete={handleZoomComplete} />
+      </React.Suspense>
 
       <ProgressIndicator currentStage={Stage.Welcome} />
 
@@ -191,9 +216,9 @@ export default function Welcome() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="w-full flex flex-col items-center gap-4"
-              style={{ marginTop: '35vh' }}
+              style={{ marginTop: 'clamp(20vh, 30vw, 35vh)' }}
             >
-              {globeMessages.slice(0, globeMsgIdx + 1).map((msg, i) => (
+              {GLOBE_MESSAGES.slice(0, globeMsgIdx + 1).map((msg, i) => (
                 <motion.div
                   key={i}
                   initial={{ opacity: 0, y: -8 }}
@@ -295,7 +320,8 @@ export default function Welcome() {
                   <span className="text-4xl block mb-4">🔍</span>
                   <p className="text-gold font-display font-bold text-lg mb-3">سؤال من النظام</p>
                   <p className="text-warm-white font-body text-xl leading-relaxed">
-                    في نظرش من هو هذا الشخص<br />
+                    في نظرش من هو هذا الشخص
+                    <br />
                     اللي سوينا له هذه التجربه؟
                   </p>
                 </div>
@@ -397,13 +423,12 @@ export default function Welcome() {
                     اهاااه شكل هرمون الفضول مرتفع شويه
                   </p>
                   <p className="text-warm-white font-body text-lg leading-relaxed mt-2">
-                     سرعة الضغط على الزرار<br />
+                    سرعة الضغط على الزرار
+                    <br />
                     اسرع من سرعة الضوء 😂
                   </p>
                   <div className="w-12 h-px bg-gold/20 mx-auto my-4" />
-                  <p className="text-silver-blue text-sm">
-                    امزح امزح .... يله عنستكشف الان 
-                  </p>
+                  <p className="text-silver-blue text-sm">امزح امزح .... يله عنستكشف الان</p>
                 </div>
               </GlassCard>
             </motion.div>
@@ -429,6 +454,20 @@ export default function Welcome() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Skip button - appears after 3 seconds */}
+        {phase !== 'card' && phase !== 'comedy' && phase !== 'transition' && phase !== 'done' && (
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.6 }}
+            transition={{ delay: 3 }}
+            onClick={() => setPhase('done')}
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 text-silver-blue/50 text-xs font-mono
+                       hover:text-silver-blue transition-colors px-4 py-2"
+          >
+            تخطي ←
+          </motion.button>
+        )}
       </div>
     </motion.div>
   );
