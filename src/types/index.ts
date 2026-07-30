@@ -1,5 +1,13 @@
 export type SoundType =
-  'click' | 'success' | 'error' | 'door' | 'typing' | 'complete' | 'loading' | 'ready';
+  | 'click'
+  | 'success'
+  | 'error'
+  | 'door'
+  | 'typing'
+  | 'typing_soft'
+  | 'complete'
+  | 'loading'
+  | 'ready';
 
 export interface Choice {
   id: string;

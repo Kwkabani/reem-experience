@@ -4,11 +4,12 @@ interface Options {
   speed?: number;
   delay?: number;
   onChar?: () => void;
+  soundInterval?: number;
 }
 
 export default function useTypewriter(
   text: string,
-  { speed = 40, delay = 0, onChar }: Options = {},
+  { speed = 40, delay = 0, onChar, soundInterval = 1 }: Options = {},
 ) {
   const [displayed, setDisplayed] = useState('');
   const [started, setStarted] = useState(false);
@@ -17,8 +18,11 @@ export default function useTypewriter(
   const charTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const onCharRef = useRef(onChar);
   onCharRef.current = onChar;
+  const soundIntervalRef = useRef(soundInterval);
+  soundIntervalRef.current = soundInterval;
 
   const batchRef = useRef(0);
+  const soundBatchRef = useRef(0);
   const BATCH_SIZE = 3;
 
   useEffect(() => {
@@ -30,6 +34,7 @@ export default function useTypewriter(
     if (!started) return;
     indexRef.current = 0;
     batchRef.current = 0;
+    soundBatchRef.current = 0;
     setDisplayed('');
     setIsComplete(false);
 
@@ -39,11 +44,15 @@ export default function useTypewriter(
       if (indexRef.current < text.length) {
         indexRef.current++;
         batchRef.current++;
-        onCharRef.current?.();
 
         if (batchRef.current >= BATCH_SIZE || indexRef.current >= text.length) {
           setDisplayed(text.slice(0, indexRef.current));
           batchRef.current = 0;
+          soundBatchRef.current++;
+          if (soundBatchRef.current >= soundIntervalRef.current) {
+            onCharRef.current?.();
+            soundBatchRef.current = 0;
+          }
         }
       } else {
         if (charTimerRef.current) clearInterval(charTimerRef.current);

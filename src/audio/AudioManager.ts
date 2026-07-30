@@ -27,7 +27,16 @@ export class AudioManager {
 
   // BUG-02 FIX: async + await resume so sounds play on first user gesture
   async play(
-    type: 'click' | 'success' | 'error' | 'door' | 'typing' | 'complete' | 'loading' | 'ready',
+    type:
+      | 'click'
+      | 'success'
+      | 'error'
+      | 'door'
+      | 'typing'
+      | 'typing_soft'
+      | 'complete'
+      | 'loading'
+      | 'ready',
   ) {
     if (!this.ctx || !this.initialized) return;
 
@@ -86,6 +95,14 @@ export class AudioManager {
           AUDIO_TONES.typing.duration,
           AUDIO_TONES.typing.type,
           AUDIO_TONES.typing.volume,
+        );
+        break;
+      case 'typing_soft':
+        this.playTone(
+          AUDIO_TONES.typing_soft.freq,
+          AUDIO_TONES.typing_soft.duration,
+          AUDIO_TONES.typing_soft.type,
+          AUDIO_TONES.typing_soft.volume,
         );
         break;
       case 'complete':

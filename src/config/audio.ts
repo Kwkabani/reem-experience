@@ -10,6 +10,7 @@ export const AUDIO_TONES = {
     { freq: 200, duration: 0.2, type: 'sawtooth' as OscillatorType, volume: 0.12, delay: 150 },
   ],
   typing: { freq: 1000, duration: 0.02, type: 'sine' as OscillatorType, volume: 0.04 },
+  typing_soft: { freq: 600, duration: 0.025, type: 'sine' as OscillatorType, volume: 0.025 },
   complete: [
     { freq: 262, duration: 0.15, type: 'sine' as OscillatorType, volume: 0.1 },
     { freq: 330, duration: 0.15, type: 'sine' as OscillatorType, volume: 0.1, delay: 150 },

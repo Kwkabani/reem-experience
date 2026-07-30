@@ -2,6 +2,7 @@ import { lazy } from 'react';
 import type { AppModule } from './types';
 
 const Days365 = lazy(() => import('./365-days'));
+const IslandStory = lazy(() => import('./island-story'));
 
 export const modules: AppModule[] = [
   {
@@ -12,6 +13,14 @@ export const modules: AppModule[] = [
     accentColor: '#D4AF37',
     component: Days365,
     badge: 'v1.0',
+  },
+  {
+    id: 'island-story',
+    name: 'لعبة الاستكشاف',
+    icon: '🏖️',
+    description: 'اكتشفي جزيرة الأماني',
+    accentColor: '#4a9eff',
+    component: IslandStory,
   },
 ];
 

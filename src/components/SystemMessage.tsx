@@ -1,7 +1,8 @@
-import { useCallback, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useAudio } from '../context/AudioContext';
 import useTypewriter from '../hooks/useTypewriter';
+import type { SoundType } from '../types';
 
 interface SystemMessageProps {
   text: string;
@@ -9,6 +10,9 @@ interface SystemMessageProps {
   speed?: number;
   className?: string;
   prefix?: boolean;
+  onComplete?: () => void;
+  soundInterval?: number;
+  soundType?: SoundType;
 }
 
 export default function SystemMessage({
@@ -17,17 +21,30 @@ export default function SystemMessage({
   speed = 30,
   className = '',
   prefix = true,
+  onComplete,
+  soundInterval = 1,
+  soundType = 'typing',
 }: SystemMessageProps) {
   const { playSound } = useAudio();
-  const charCountRef = useRef(0);
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
+  const completedRef = useRef(false);
   const onChar = useCallback(() => {
-    charCountRef.current++;
-    if (charCountRef.current % 5 === 0) {
-      playSound('typing');
+    playSound(soundType);
+  }, [playSound, soundType]);
+  const { displayed: displayText, isComplete } = useTypewriter(text, {
+    speed,
+    delay,
+    onChar,
+    soundInterval,
+  });
+
+  useEffect(() => {
+    if (isComplete && !completedRef.current) {
+      completedRef.current = true;
+      onCompleteRef.current?.();
     }
-  }, [playSound]);
-  // BUG-10: destructure { displayed, isComplete } from updated hook
-  const { displayed: displayText, isComplete } = useTypewriter(text, { speed, delay, onChar });
+  }, [isComplete]);
 
   return (
     <motion.div
