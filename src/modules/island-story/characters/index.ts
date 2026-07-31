@@ -6,7 +6,7 @@ export {
   GardenerGirl,
   ArtistGirl,
   SageGirl,
-  BrewerGirl,
+  AdventurerGirl,
   MusicianGirl,
   StargazerGirl,
   TechieGirl,

@@ -1,6 +1,6 @@
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { AudioProvider } from '../../context/AudioContext';
+import { AudioProvider, useAudio } from '../../context/AudioContext';
 import { GameProvider, useGame } from './context/GameContext';
 import { ModuleCompleteProvider } from './context/ModuleCompleteContext';
 import ErrorBoundary from '../../components/ErrorBoundary';
@@ -11,6 +11,14 @@ import CharacterScene from './scenes/CharacterScene';
 import type { ModuleProps } from '../types';
 
 const scenes = [OceanScene, BottleScene, IslandRevealScene, CharacterScene];
+
+function AudioBoot() {
+  const { enableAudio } = useAudio();
+  useEffect(() => {
+    enableAudio();
+  }, [enableAudio]);
+  return null;
+}
 
 function Game() {
   const { currentScene } = useGame();
@@ -36,6 +44,7 @@ function Game() {
 export default function IslandStoryModule({ onComplete }: ModuleProps) {
   return (
     <AudioProvider>
+      <AudioBoot />
       <ModuleCompleteProvider onComplete={onComplete}>
         <GameProvider>
           <Suspense

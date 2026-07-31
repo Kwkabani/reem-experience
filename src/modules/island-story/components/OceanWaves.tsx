@@ -23,28 +23,24 @@ const WAVE_DATA = [
     svg: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120'%3E%3Cpath d='M0,60 C200,120 400,0 600,60 C800,120 1000,0 1200,60 L1200,120 L0,120 Z' fill='rgba(13,42,58,0.3)'/%3E%3C/svg%3E")`,
     size: 1200,
     duration: 8,
-    distance: -600,
     topOffset: 0,
   },
   {
     svg: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120'%3E%3Cpath d='M0,60 C200,120 400,0 600,60 C800,120 1000,0 1200,60 L1200,120 L0,120 Z' fill='rgba(20,50,70,0.25)'/%3E%3C/svg%3E")`,
     size: 1200,
     duration: 11,
-    distance: -600,
     topOffset: -20,
   },
   {
     svg: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120'%3E%3Cpath d='M0,60 C200,120 400,0 600,60 C800,120 1000,0 1200,60 L1200,120 L0,120 Z' fill='rgba(30,60,80,0.18)'/%3E%3C/svg%3E")`,
     size: 1200,
     duration: 14,
-    distance: -600,
     topOffset: -40,
   },
   {
     svg: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120'%3E%3Cpath d='M0,40 C150,100 300,0 600,50 C900,100 1050,0 1200,40 L1200,120 L0,120 Z' fill='rgba(40,80,100,0.12)'/%3E%3C/svg%3E")`,
     size: 1800,
     duration: 18,
-    distance: -900,
     topOffset: -60,
   },
 ];
@@ -195,17 +191,15 @@ function OceanWaves() {
         {WAVE_DATA.map((wave, i) => (
           <motion.div
             key={i}
-            className="absolute bottom-0"
+            className="absolute bottom-0 inset-x-0"
             style={{
-              left: '-50%',
-              width: '200%',
               height: '100%',
-              background: 'repeat-x',
+              backgroundRepeat: 'repeat-x',
               backgroundImage: wave.svg,
               backgroundSize: `${wave.size}px 120px`,
               top: `${wave.topOffset}px`,
             }}
-            animate={{ x: [0, wave.distance] }}
+            animate={{ x: [0, -wave.size] }}
             transition={{ duration: wave.duration, repeat: Infinity, ease: 'linear' }}
           />
         ))}

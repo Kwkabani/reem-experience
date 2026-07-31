@@ -6,7 +6,7 @@ import { sanitizeInput } from '../../../utils/sanitize';
 import { staggerContainer, fadeUp, scaleIn } from '../systems/AnimationPresets';
 import CharacterGallery from '../characters/CharacterGallery';
 import type { AvatarType, PersonalityType } from '../types';
-import type { CharacterConfig } from '../characters/types';
+import type { CharacterConfig, CharacterAppearance } from '../characters/types';
 import { PERSONALITIES } from '../data/story';
 
 interface CharacterCreatorProps {
@@ -16,6 +16,7 @@ interface CharacterCreatorProps {
     personality: PersonalityType,
     characterId?: string,
     characterName?: string,
+    characterAppearance?: CharacterAppearance,
   ) => void;
 }
 
@@ -56,7 +57,14 @@ export default function CharacterCreator({ onSave }: CharacterCreatorProps) {
   };
 
   const handleSave = () => {
-    onSave(sanitizeInput(name), avatar, personality!, character?.id, character?.name);
+    onSave(
+      sanitizeInput(name),
+      avatar,
+      personality!,
+      character?.id,
+      character?.name,
+      character?.appearance,
+    );
   };
 
   const handleBack = () => {

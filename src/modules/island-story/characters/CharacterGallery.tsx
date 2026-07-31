@@ -75,14 +75,13 @@ function CharacterGallery({ onConfirm }: CharacterGalleryProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="grid grid-cols-3 gap-3 w-full"
+            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 w-full"
             dir="rtl"
           >
             {CHARACTERS.map((char, i) => (
               <CharacterCard
                 key={char.id}
                 character={char}
-                isSelected={false}
                 onSelect={(id) => setSelectedId(id)}
                 index={i}
               />

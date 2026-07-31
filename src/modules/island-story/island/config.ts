@@ -8,8 +8,7 @@ export const LOCATIONS: LocationConfig[] = [
     revealOrder: 0,
     animationType: 'gentle',
     scale: 1.3,
-    depthLayer: 0,
-    cameraTarget: { x: 0, y: 8 },
+    depthLayer: 4,
     revealText: 'وصلتِ إلى الشاطئ',
   },
   {
@@ -19,8 +18,7 @@ export const LOCATIONS: LocationConfig[] = [
     revealOrder: 1,
     animationType: 'glow',
     scale: 1,
-    depthLayer: 1,
-    cameraTarget: { x: 30, y: 4 },
+    depthLayer: 3,
     revealText: 'بيت صغير ينتظر حكاية',
   },
   {
@@ -30,8 +28,7 @@ export const LOCATIONS: LocationConfig[] = [
     revealOrder: 2,
     animationType: 'float',
     scale: 1.1,
-    depthLayer: 1,
-    cameraTarget: { x: -20, y: 0 },
+    depthLayer: 2,
     revealText: 'شجرة تحمل أسرار الجزيرة',
   },
   {
@@ -41,8 +38,7 @@ export const LOCATIONS: LocationConfig[] = [
     revealOrder: 3,
     animationType: 'pulse',
     scale: 0.85,
-    depthLayer: 2,
-    cameraTarget: { x: 40, y: -4 },
+    depthLayer: 1,
     revealText: 'مكان لم يكتشفه أحد',
   },
   {
@@ -52,8 +48,7 @@ export const LOCATIONS: LocationConfig[] = [
     revealOrder: 4,
     animationType: 'none',
     scale: 0.7,
-    depthLayer: 2,
-    cameraTarget: { x: -25, y: -8 },
+    depthLayer: 0,
     revealText: 'من هنا تبدأ الحكاية',
   },
 ];
@@ -66,7 +61,6 @@ export const REVEAL_SEQUENCE: RevealPhase[] = [
     cameraX: 0,
     cameraY: 0,
     fogOpacity: 0.95,
-    fogParticleCount: 20,
   },
   {
     id: 'rising',
@@ -75,7 +69,6 @@ export const REVEAL_SEQUENCE: RevealPhase[] = [
     cameraX: 0,
     cameraY: -2,
     fogOpacity: 0.85,
-    fogParticleCount: 14,
   },
   {
     id: 'clearing',
@@ -84,7 +77,6 @@ export const REVEAL_SEQUENCE: RevealPhase[] = [
     cameraX: 0,
     cameraY: -4,
     fogOpacity: 0.5,
-    fogParticleCount: 8,
   },
   {
     id: 'beach_reveal',
@@ -93,7 +85,6 @@ export const REVEAL_SEQUENCE: RevealPhase[] = [
     cameraX: 0,
     cameraY: 6,
     fogOpacity: 0.3,
-    fogParticleCount: 5,
   },
   {
     id: 'house_reveal',
@@ -102,7 +93,6 @@ export const REVEAL_SEQUENCE: RevealPhase[] = [
     cameraX: 22,
     cameraY: 2,
     fogOpacity: 0.2,
-    fogParticleCount: 3,
   },
   {
     id: 'tree_reveal',
@@ -111,7 +101,6 @@ export const REVEAL_SEQUENCE: RevealPhase[] = [
     cameraX: -15,
     cameraY: 0,
     fogOpacity: 0.12,
-    fogParticleCount: 2,
   },
   {
     id: 'cave_reveal',
@@ -120,7 +109,6 @@ export const REVEAL_SEQUENCE: RevealPhase[] = [
     cameraX: 30,
     cameraY: -6,
     fogOpacity: 0.06,
-    fogParticleCount: 1,
   },
   {
     id: 'tower_reveal',
@@ -129,7 +117,6 @@ export const REVEAL_SEQUENCE: RevealPhase[] = [
     cameraX: -20,
     cameraY: -8,
     fogOpacity: 0,
-    fogParticleCount: 0,
   },
 ];
 

@@ -14,10 +14,6 @@ function Terrain() {
             <stop offset="60%" stopColor="rgba(40,60,30,0.08)" />
             <stop offset="100%" stopColor="rgba(30,50,20,0.12)" />
           </linearGradient>
-          <radialGradient id="shadow-blob" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="rgba(0,0,0,0.12)" />
-            <stop offset="100%" stopColor="rgba(0,0,0,0)" />
-          </radialGradient>
         </defs>
 
         {/* Main ground fill behind all locations */}
@@ -61,13 +57,6 @@ function Terrain() {
           fill="none"
           strokeLinecap="round"
         />
-
-        {/* Shadows under locations */}
-        <ellipse cx="200" cy="228" rx="55" ry="10" fill="url(#shadow-blob)" />
-        <ellipse cx="112" cy="158" rx="40" ry="8" fill="url(#shadow-blob)" />
-        <ellipse cx="288" cy="144" rx="45" ry="9" fill="url(#shadow-blob)" />
-        <ellipse cx="80" cy="118" rx="35" ry="7" fill="url(#shadow-blob)" />
-        <ellipse cx="320" cy="100" rx="30" ry="6" fill="url(#shadow-blob)" />
 
         {/* Ground texture / grass patches */}
         <g opacity="0.04">

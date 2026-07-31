@@ -6,7 +6,6 @@ export interface LocationConfig {
   animationType: 'float' | 'gentle' | 'glow' | 'pulse' | 'none';
   scale: number;
   depthLayer: number;
-  cameraTarget: { x: number; y: number };
   revealText: string;
 }
 
@@ -17,7 +16,6 @@ export interface RevealPhase {
   cameraX: number;
   cameraY: number;
   fogOpacity: number;
-  fogParticleCount: number;
 }
 
 export interface RevealState {

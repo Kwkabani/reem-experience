@@ -91,6 +91,15 @@ function Effects({ showMagicalParticles }: EffectsProps) {
       {/* Magical floating particles */}
       {showMagicalParticles && (
         <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 300">
+          <defs>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
           {magicalParticles.map((p, i) => (
             <motion.circle
               key={i}
@@ -116,15 +125,6 @@ function Effects({ showMagicalParticles }: EffectsProps) {
           ))}
         </svg>
       )}
-
-      {/* Subtle star sparkle overlay */}
-      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 300">
-        <defs>
-          <filter id="sparkle-glow">
-            <feGaussianBlur stdDeviation="1" />
-          </filter>
-        </defs>
-      </svg>
     </div>
   );
 }

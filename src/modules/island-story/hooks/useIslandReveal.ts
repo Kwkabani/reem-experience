@@ -10,30 +10,25 @@ export function useIslandReveal(onPhaseChange?: (phase: string) => void) {
   const currentPhase = REVEAL_SEQUENCE[phaseIndex]!;
 
   const advancePhase = useCallback(() => {
-    setPhaseIndex((prev) => {
-      const next = prev + 1;
-      if (next < REVEAL_SEQUENCE.length) {
-        const phase = REVEAL_SEQUENCE[next]!;
-        onPhaseChangeRef.current?.(phase.id);
-
-        const newLocation = LOCATIONS.find((loc) => LOCATION_REVEAL_MAP[loc.id] === phase!.id);
-        if (newLocation) {
-          setRevealedLocations((prevSet) => {
-            const nextSet = new Set(prevSet);
-            nextSet.add(newLocation.id);
-            return nextSet;
-          });
-        }
-      }
-      return Math.min(next, REVEAL_SEQUENCE.length - 1);
-    });
+    setPhaseIndex((prev) => Math.min(prev + 1, REVEAL_SEQUENCE.length - 1));
   }, []);
 
   useEffect(() => {
-    if (phaseIndex === 0) {
-      const t = setTimeout(() => advancePhase(), 1500);
-      return () => clearTimeout(t);
+    const phase = REVEAL_SEQUENCE[phaseIndex];
+    if (!phase) return;
+    onPhaseChangeRef.current?.(phase.id);
+
+    const newLocation = LOCATIONS.find((loc) => LOCATION_REVEAL_MAP[loc.id] === phase.id);
+    if (newLocation) {
+      setRevealedLocations((prevSet) => {
+        const nextSet = new Set(prevSet);
+        nextSet.add(newLocation.id);
+        return nextSet;
+      });
     }
+  }, [phaseIndex]);
+
+  useEffect(() => {
     if (phaseIndex >= REVEAL_SEQUENCE.length - 1) return;
     const t = setTimeout(() => advancePhase(), currentPhase.duration);
     return () => clearTimeout(t);
@@ -51,7 +46,6 @@ export function useIslandReveal(onPhaseChange?: (phase: string) => void) {
     cameraX: currentPhase.cameraX,
     cameraY: currentPhase.cameraY,
     fogOpacity: currentPhase.fogOpacity,
-    fogParticleCount: currentPhase.fogParticleCount,
     isLocationRevealed,
     isAllLocationsRevealed: revealedLocations.size >= LOCATIONS.length,
     hasEnteredWelcome: phaseIndex >= REVEAL_SEQUENCE.length - 1,

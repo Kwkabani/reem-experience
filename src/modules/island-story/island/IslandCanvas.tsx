@@ -132,7 +132,7 @@ export default function IslandCanvas({
                 const anim = locationAnimationVariants[loc.animationType] || {};
 
                 return (
-                  <motion.div
+                  <div
                     key={loc.id}
                     className="absolute"
                     style={{
@@ -143,15 +143,18 @@ export default function IslandCanvas({
                       filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))',
                       zIndex: loc.depthLayer,
                     }}
-                    initial={{ opacity: 0, y: 15, scale: 0.7 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -10, scale: 0.8 }}
-                    transition={{ duration: 1.2, ease: [0.19, 1, 0.22, 1] }}
                   >
-                    <motion.div {...anim}>
-                      <Component />
+                    <motion.div
+                      initial={{ opacity: 0, y: 15, scale: 0.7 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.8 }}
+                      transition={{ duration: 1.2, ease: [0.19, 1, 0.22, 1] }}
+                    >
+                      <motion.div {...anim}>
+                        <Component />
+                      </motion.div>
                     </motion.div>
-                  </motion.div>
+                  </div>
                 );
               })}
             </ParallaxLayer>

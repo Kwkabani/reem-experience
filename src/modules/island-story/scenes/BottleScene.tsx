@@ -16,6 +16,7 @@ export default function BottleScene() {
   const [shakeIndex, setShakeIndex] = useState(0);
   const [messageIndex, setMessageIndex] = useState(0);
   const [textComplete, setTextComplete] = useState(false);
+  const advancingRef = useRef(false);
 
   useEffect(() => {
     playSound('ready');
@@ -93,11 +94,13 @@ export default function BottleScene() {
   const currentMessage = messageIndex === 0 ? BOTTLE_MESSAGE_1 : BOTTLE_MESSAGE_2;
 
   const handleContinue = () => {
+    if (advancingRef.current) return;
     playSound('click');
     if (messageIndex === 0) {
       setMessageIndex(1);
       setTextComplete(false);
     } else {
+      advancingRef.current = true;
       playSound('complete');
       completeScene(currentScene);
       goToNextScene();
@@ -124,7 +127,7 @@ export default function BottleScene() {
       {skipablePhases.has(phase) && (
         <motion.button
           onClick={handleSkip}
-          className="absolute top-4 right-4 z-20 px-3 py-1.5 rounded-lg text-xs font-mono text-silver-blue/40 hover:text-silver-blue/70 border border-white/5 hover:border-white/10 hover:bg-white/[0.03] transition-all duration-200 cursor-pointer select-none"
+          className="absolute top-4 right-4 z-20 px-3 py-2.5 rounded-lg text-xs font-mono text-silver-blue/40 hover:text-silver-blue/70 border border-white/5 hover:border-white/10 hover:bg-white/[0.03] transition-all duration-200 cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-silver-blue/60 min-h-[44px]"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}

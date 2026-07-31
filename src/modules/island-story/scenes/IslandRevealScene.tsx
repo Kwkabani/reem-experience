@@ -123,7 +123,7 @@ export default function IslandRevealScene() {
         cameraY={reveal.cameraY}
         fogOpacity={reveal.fogOpacity}
       >
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center min-h-[100dvh] w-full max-w-lg px-5 mx-auto">
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center w-full max-w-lg px-5 py-8 mx-auto overflow-y-auto [justify-content:safe_center]">
           {/* Phase text */}
           <AnimatePresence mode="wait">
             {currentText && (

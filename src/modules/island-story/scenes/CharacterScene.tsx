@@ -7,6 +7,7 @@ import { useModuleComplete } from '../context/ModuleCompleteContext';
 import { useAudio } from '../../../context/AudioContext';
 import { sceneTransition } from '../systems/AnimationPresets';
 import type { AvatarType, PersonalityType } from '../types';
+import type { CharacterAppearance } from '../characters/types';
 
 export default function CharacterScene() {
   const { setPlayer, completeScene, currentScene, resetGame } = useGame();
@@ -20,9 +21,10 @@ export default function CharacterScene() {
     personality: PersonalityType,
     characterId?: string,
     characterName?: string,
+    characterAppearance?: CharacterAppearance,
   ) => {
     playSound('success');
-    setPlayer(name, avatar, personality, characterId, characterName);
+    setPlayer(name, avatar, personality, characterId, characterName, characterAppearance);
     completeScene(currentScene);
     onComplete?.();
   };
