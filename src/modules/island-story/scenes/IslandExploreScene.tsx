@@ -4,6 +4,7 @@ import GlassCard from '../../../components/GlassCard';
 import SystemMessage from '../../../components/SystemMessage';
 import Button from '../../../components/Button';
 import IslandCanvas from '../island/IslandCanvas';
+import ResetGameDialog from '../components/ResetGameDialog';
 import { useGame } from '../context/useGame';
 import { useModuleComplete } from '../context/useModuleComplete';
 import { useAudio } from '../../../context/AudioContext';
@@ -29,11 +30,12 @@ const LOCATION_STORIES: Record<string, string> = {
 };
 
 export default function IslandExploreScene() {
-  const { player, completeScene, currentScene, island } = useGame();
+  const { player, completeScene, currentScene, island, resetGame } = useGame();
   const { playSound } = useAudio();
   const onComplete = useModuleComplete();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [storyDone, setStoryDone] = useState(false);
+  const [showReset, setShowReset] = useState(false);
 
   const unlocked = island.unlockedLocations;
 
@@ -72,6 +74,12 @@ export default function IslandExploreScene() {
     onComplete?.();
   };
 
+  const handleReset = () => {
+    playSound('click');
+    resetGame();
+    setShowReset(false);
+  };
+
   return (
     <motion.div
       {...sceneTransition}
@@ -98,6 +106,23 @@ export default function IslandExploreScene() {
         onLocationSelect={handleSelect}
       >
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-between w-full max-w-lg px-4 py-6 mx-auto pointer-events-none">
+          {/* Restart button */}
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1, duration: 0.8 }}
+            onClick={() => {
+              playSound('click');
+              setShowReset(true);
+            }}
+            className="absolute top-2 right-2 z-20 px-3 py-2.5 rounded-lg text-xs font-mono
+              text-silver-blue/40 hover:text-silver-blue/70 border border-white/5 hover:border-white/10
+              hover:bg-white/[0.03] transition-all duration-200 cursor-pointer select-none
+              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-silver-blue/60 min-h-[44px] pointer-events-auto"
+          >
+            إعادة اللعبة
+          </motion.button>
+
           {/* HUD */}
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -189,6 +214,12 @@ export default function IslandExploreScene() {
           </div>
         </div>
       </IslandCanvas>
+
+      <ResetGameDialog
+        open={showReset}
+        onConfirm={handleReset}
+        onCancel={() => setShowReset(false)}
+      />
     </motion.div>
   );
 }
