@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useGame } from '../context/GameContext';
+import { useGame } from '../context/useGame';
 import { useAudio } from '../../../context/AudioContext';
 import { sceneTransition } from '../systems/AnimationPresets';
 import { BOTTLE_MESSAGE_1, BOTTLE_MESSAGE_2 } from '../data/story';

@@ -1,31 +1,9 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-  useMemo,
-  useEffect,
-  type ReactNode,
-} from 'react';
+import { useState, useCallback, useMemo, useEffect, type ReactNode } from 'react';
 import type { GameState, AvatarType, PersonalityType } from '../types';
 import type { CharacterAppearance } from '../characters/types';
 import { SCENE_COUNT, SCENES } from '../types';
 import { saveGameState, loadGameState, clearGameState } from '../systems/SaveSystem';
-
-interface GameContextType extends GameState {
-  goToNextScene: () => void;
-  setPlayer: (
-    name: string,
-    avatar: AvatarType,
-    personality: PersonalityType,
-    characterId?: string,
-    characterName?: string,
-    characterAppearance?: CharacterAppearance,
-  ) => void;
-  completeScene: (sceneId: number) => void;
-  hasCompletedScene: (sceneId: number) => boolean;
-  resetGame: () => void;
-}
+import { GameContext, type GameContextType } from './game-context';
 
 const INITIAL_STATE: GameState = {
   currentScene: SCENES.Ocean,
@@ -37,8 +15,6 @@ const INITIAL_STATE: GameState = {
   },
   completedScenes: [],
 };
-
-const GameContext = createContext<GameContextType | null>(null);
 
 export function GameProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<GameState>(() => {
@@ -106,21 +82,38 @@ export function GameProvider({ children }: { children: ReactNode }) {
     [state.completedScenes],
   );
 
+  const unlockLocations = useCallback((ids: string[]) => {
+    setState((prev) => {
+      const merged = [...prev.island.unlockedLocations];
+      let changed = false;
+      for (const id of ids) {
+        if (!merged.includes(id)) {
+          merged.push(id);
+          changed = true;
+        }
+      }
+      if (!changed) return prev;
+      return { ...prev, island: { ...prev.island, unlockedLocations: merged } };
+    });
+  }, []);
+
   const resetGame = useCallback(() => {
     clearGameState();
     setState(INITIAL_STATE);
   }, []);
 
-  const value = useMemo(
-    () => ({ ...state, goToNextScene, setPlayer, completeScene, hasCompletedScene, resetGame }),
-    [state, goToNextScene, setPlayer, completeScene, hasCompletedScene, resetGame],
+  const value = useMemo<GameContextType>(
+    () => ({
+      ...state,
+      goToNextScene,
+      setPlayer,
+      completeScene,
+      hasCompletedScene,
+      unlockLocations,
+      resetGame,
+    }),
+    [state, goToNextScene, setPlayer, completeScene, hasCompletedScene, unlockLocations, resetGame],
   );
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
-}
-
-export function useGame() {
-  const context = useContext(GameContext);
-  if (!context) throw new Error('useGame must be used within GameProvider');
-  return context;
 }

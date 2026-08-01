@@ -27,11 +27,12 @@ export interface GameState {
 export const SCENES = {
   Ocean: 0,
   Bottle: 1,
-  IslandReveal: 2,
-  CharacterCreation: 3,
+  CharacterCreation: 2,
+  IslandReveal: 3,
+  IslandExplore: 4,
 } as const;
 
 export type Scene = (typeof SCENES)[keyof typeof SCENES];
-export const SCENE_COUNT = 4;
+export const SCENE_COUNT = 5;
 
 export const SAVE_KEY = 'island-story-save';

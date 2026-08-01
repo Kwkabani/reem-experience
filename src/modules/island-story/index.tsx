@@ -1,16 +1,18 @@
 import { Suspense, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AudioProvider, useAudio } from '../../context/AudioContext';
-import { GameProvider, useGame } from './context/GameContext';
+import { GameProvider } from './context/GameContext';
+import { useGame } from './context/useGame';
 import { ModuleCompleteProvider } from './context/ModuleCompleteContext';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import OceanScene from './scenes/OceanScene';
 import BottleScene from './scenes/BottleScene';
-import IslandRevealScene from './scenes/IslandRevealScene';
 import CharacterScene from './scenes/CharacterScene';
+import IslandRevealScene from './scenes/IslandRevealScene';
+import IslandExploreScene from './scenes/IslandExploreScene';
 import type { ModuleProps } from '../types';
 
-const scenes = [OceanScene, BottleScene, IslandRevealScene, CharacterScene];
+const scenes = [OceanScene, BottleScene, CharacterScene, IslandRevealScene, IslandExploreScene];
 
 function AudioBoot() {
   const { enableAudio } = useAudio();

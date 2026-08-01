@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import OceanWaves from '../components/OceanWaves';
 import SystemMessage from '../../../components/SystemMessage';
-import { useGame } from '../context/GameContext';
+import { useGame } from '../context/useGame';
 import { useAudio } from '../../../context/AudioContext';
 import { sceneTransition, fadeUp } from '../systems/AnimationPresets';
 import { STARTER_MESSAGES } from '../data/story';

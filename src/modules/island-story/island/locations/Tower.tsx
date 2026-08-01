@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 
 function Tower() {
   return (
-    <svg width="100%" height="100%" viewBox="0 0 80 120" fill="none" className="drop-shadow-lg">
+    <svg width="100%" height="100%" viewBox="0 -10 80 130" fill="none" className="drop-shadow-lg">
       <defs>
         <linearGradient id="tower-body" x1="0" y1="0" x2="1" y2="0">
           <stop offset="0%" stopColor="#6a6a7a" stopOpacity="0.5" />

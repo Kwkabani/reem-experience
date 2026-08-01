@@ -1,4 +1,4 @@
-import { type ReactNode, useMemo } from 'react';
+import { type ReactNode, useMemo, type CSSProperties } from 'react';
 import { motion } from 'framer-motion';
 import Background from './layers/Background';
 import Environment from './layers/Environment';
@@ -10,7 +10,7 @@ import AncientTree from './locations/AncientTree';
 import Cave from './locations/Cave';
 import Tower from './locations/Tower';
 import { LOCATIONS, ISLAND_ASPECT_RATIO, PARALLAX_FACTORS } from './config';
-import type { RevealState } from './types';
+import type { LocationConfig, RevealState } from './types';
 
 interface IslandCanvasProps {
   reveal: RevealState;
@@ -19,6 +19,9 @@ interface IslandCanvasProps {
   cameraY: number;
   fogOpacity: number;
   children?: ReactNode;
+  character?: ReactNode;
+  characterLocationId?: string;
+  onLocationSelect?: (id: string) => void;
 }
 
 const locationComponents: Record<string, React.ComponentType> = {
@@ -68,6 +71,51 @@ function ParallaxLayer({ factor, cameraX, cameraY, children }: ParallaxLayerProp
   );
 }
 
+interface CharacterFigureProps {
+  character: ReactNode;
+  locationId: string;
+  locations: LocationConfig[];
+}
+
+function CharacterFigure({ character, locationId, locations }: CharacterFigureProps) {
+  const loc = locations.find((l) => l.id === locationId);
+  if (!loc) return null;
+  return (
+    <div
+      className="absolute pointer-events-none"
+      style={{
+        left: `${loc.x}%`,
+        top: `${loc.y + 5}%`,
+        transform: 'translate(-50%, -50%)',
+        width: '13%',
+        zIndex: 60,
+        filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.35))',
+      }}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 1.2, ease: [0.19, 1, 0.22, 1], delay: 0.4 }}
+      >
+        <motion.div
+          animate={{ y: [0, -4, 0] }}
+          transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          {character}
+        </motion.div>
+      </motion.div>
+      <div
+        className="absolute -bottom-1 left-1/2 -translate-x-1/2"
+        style={{
+          width: '70%',
+          height: '8%',
+          background: 'radial-gradient(ellipse, rgba(0,0,0,0.3), transparent 70%)',
+        }}
+      />
+    </div>
+  );
+}
+
 export default function IslandCanvas({
   reveal,
   cameraZoom,
@@ -75,6 +123,9 @@ export default function IslandCanvas({
   cameraY,
   fogOpacity,
   children,
+  character,
+  characterLocationId,
+  onLocationSelect,
 }: IslandCanvasProps) {
   const locationScaleStyles = useMemo(() => {
     const map: Record<string, { scale: number; depthLayer: number }> = {};
@@ -131,19 +182,8 @@ export default function IslandCanvas({
                 if (!Component) return null;
                 const anim = locationAnimationVariants[loc.animationType] || {};
 
-                return (
-                  <div
-                    key={loc.id}
-                    className="absolute"
-                    style={{
-                      left: `${loc.x}%`,
-                      top: `${loc.y}%`,
-                      transform: 'translate(-50%, -50%)',
-                      width: `${22 * locationScaleStyles[loc.id]!.scale}%`,
-                      filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))',
-                      zIndex: loc.depthLayer,
-                    }}
-                  >
+                const content = (
+                  <>
                     <motion.div
                       initial={{ opacity: 0, y: 15, scale: 0.7 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -154,9 +194,58 @@ export default function IslandCanvas({
                         <Component />
                       </motion.div>
                     </motion.div>
+                    {onLocationSelect && (
+                      <span
+                        className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full
+                          bg-[rgba(201,168,76,0.15)] border border-gold/40
+                          flex items-center justify-center text-gold text-xs
+                          shadow-[0_0_12px_rgba(201,168,76,0.3)]"
+                      >
+                        +
+                      </span>
+                    )}
+                  </>
+                );
+
+                const baseStyle: CSSProperties = {
+                  left: `${loc.x}%`,
+                  top: `${loc.y}%`,
+                  transform: 'translate(-50%, -50%)',
+                  width: `${22 * locationScaleStyles[loc.id]!.scale}%`,
+                  filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))',
+                  zIndex: loc.depthLayer,
+                };
+
+                if (onLocationSelect) {
+                  return (
+                    <button
+                      key={loc.id}
+                      type="button"
+                      onClick={() => onLocationSelect(loc.id)}
+                      aria-label={loc.revealText}
+                      className="absolute cursor-pointer select-none bg-transparent border-0 p-0 m-0
+                        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 rounded-xl"
+                      style={{ ...baseStyle, pointerEvents: 'auto' }}
+                    >
+                      {content}
+                    </button>
+                  );
+                }
+
+                return (
+                  <div key={loc.id} className="absolute" style={baseStyle}>
+                    {content}
                   </div>
                 );
               })}
+
+              {character && characterLocationId && (
+                <CharacterFigure
+                  character={character}
+                  locationId={characterLocationId}
+                  locations={LOCATIONS}
+                />
+              )}
             </ParallaxLayer>
 
             {/* Layer 5: Effects (parallax independent) */}

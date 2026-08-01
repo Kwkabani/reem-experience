@@ -1,6 +1,5 @@
-import { createContext, useContext, type ReactNode } from 'react';
-
-const ModuleCompleteContext = createContext<(() => void) | null>(null);
+import { type ReactNode } from 'react';
+import { ModuleCompleteContext } from './module-complete-context';
 
 export function ModuleCompleteProvider({
   onComplete,
@@ -12,8 +11,4 @@ export function ModuleCompleteProvider({
   return (
     <ModuleCompleteContext.Provider value={onComplete}>{children}</ModuleCompleteContext.Provider>
   );
-}
-
-export function useModuleComplete() {
-  return useContext(ModuleCompleteContext);
 }

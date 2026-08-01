@@ -95,12 +95,9 @@ function Environment({ fogOpacity }: EnvironmentProps) {
               style={{ display: 'block' }}
             >
               <path d={wave.path + ` M400,0 L800,0 L800,80 L0,80 Z`} fill={wave.fill} />
-              <path
-                d={wave.path
-                  .replace(/M0/g, 'M400')
-                  .replace(/C(\d+)/g, (m) => 'C' + (parseInt(m.slice(1)) + 400))}
-                fill={wave.fill}
-              />
+              <g transform="translate(400, 0)">
+                <path d={wave.path + ` M400,0 L800,0 L800,80 L0,80 Z`} fill={wave.fill} />
+              </g>
             </svg>
           </motion.div>
         ))}

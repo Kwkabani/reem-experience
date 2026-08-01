@@ -5,11 +5,12 @@ import SystemMessage from '../../../components/SystemMessage';
 import Button from '../../../components/Button';
 import IslandCanvas from '../island/IslandCanvas';
 import { useIslandReveal } from '../hooks/useIslandReveal';
-import { useGame } from '../context/GameContext';
+import { useGame } from '../context/useGame';
 import { useAudio } from '../../../context/AudioContext';
 import { sceneTransition } from '../systems/AnimationPresets';
 import { ISLAND_WELCOME } from '../data/story';
 import { LOCATIONS } from '../island/config';
+import { CHARACTERS } from '../characters/config';
 import type { LocationConfig } from '../island/types';
 
 type TextPhase =
@@ -33,7 +34,7 @@ const TEXT_LABELS: Record<string, string> = {
 };
 
 export default function IslandRevealScene() {
-  const { goToNextScene, completeScene, currentScene } = useGame();
+  const { goToNextScene, completeScene, currentScene, player, unlockLocations } = useGame();
   const { playSound } = useAudio();
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeTypingDone, setWelcomeTypingDone] = useState(false);
@@ -93,10 +94,15 @@ export default function IslandRevealScene() {
   const handleContinue = () => {
     playSound('click');
     completeScene(currentScene);
+    unlockLocations(LOCATIONS.map((l) => l.id));
     goToNextScene();
   };
 
   const currentText = TEXT_LABELS[textPhase] || null;
+
+  const CharacterComponent = player?.characterId
+    ? CHARACTERS.find((c) => c.id === player.characterId)?.component
+    : null;
 
   return (
     <motion.div
@@ -122,6 +128,14 @@ export default function IslandRevealScene() {
         cameraX={reveal.cameraX}
         cameraY={reveal.cameraY}
         fogOpacity={reveal.fogOpacity}
+        character={
+          CharacterComponent ? (
+            <div className="w-full" style={{ aspectRatio: '200 / 280' }}>
+              <CharacterComponent />
+            </div>
+          ) : undefined
+        }
+        characterLocationId="beach"
       >
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center w-full max-w-lg px-5 py-8 mx-auto overflow-y-auto [justify-content:safe_center]">
           {/* Phase text */}
